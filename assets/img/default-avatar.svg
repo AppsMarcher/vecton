@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- fundo gradiente -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2c3e58"/>
+      <stop offset="1" stop-color="#1a2438"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" fill="url(#bg)" rx="32"/>
+
+  <!-- silhueta pessoa -->
+  <ellipse cx="100" cy="68" rx="36" ry="38" fill="rgba(255,255,255,0.45)"/>
+  <path d="M10 200 C10 136 190 136 190 200Z" fill="rgba(255,255,255,0.45)"/>
+
+  <!-- colarinho branco (detalhe) -->
+  <path d="M78 136 L100 120 L122 136" fill="rgba(255,255,255,0.18)"/>
+
+  <!-- cadeado corpo -->
+  <rect x="74" y="148" width="52" height="38" rx="8" fill="white" opacity="0.92"/>
+  <!-- cadeado arco -->
+  <path d="M82 148 L82 136 a18 18 0 0 1 36 0 L118 148"
+        stroke="white" stroke-width="9" fill="none"
+        stroke-linecap="round" opacity="0.92"/>
+  <!-- buraco cadeado -->
+  <circle cx="100" cy="167" r="7" fill="#1a2438" opacity="0.7"/>
+  <rect x="96.5" y="167" width="7" height="10" rx="3" fill="#1a2438" opacity="0.7"/>
+</svg>

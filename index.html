@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vecton Planning</title>
+  <link rel="icon" type="image/png" href="fav-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="auth-only">
+  <svg aria-hidden="true" class="icon-sprite" width="0" height="0" focusable="false">
+    <symbol id="vp-logo-mark" viewBox="0 0 64 64">
+      <defs>
+        <linearGradient id="vp-blue-a" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#4F7CFF"/>
+          <stop offset="100%" stop-color="#2563EB"/>
+        </linearGradient>
+        <linearGradient id="vp-blue-b" x1="1" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#60B8FF"/>
+          <stop offset="100%" stop-color="#4F7CFF"/>
+        </linearGradient>
+      </defs>
+      <path d="M8 14h16l13 31c1.3 3.1-.9 6.5-4.3 6.5H23.8c-1.9 0-3.6-1.2-4.3-2.9L8 14Z" fill="url(#vp-blue-a)"/>
+      <path d="M39 14h17L43.4 39.7c-.8 1.6-2.4 2.6-4.2 2.6h-2.7L39 14Z" fill="url(#vp-blue-b)"/>
+      <path d="M28.5 14H39L31.8 29.6l-3.3-7.8Z" fill="#1C2B58" opacity=".72"/>
+    </symbol>
+    <symbol id="vp-icon-dashboard" viewBox="0 0 24 24">
+      <path d="M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 3h6v3h-6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vp-icon-planning" viewBox="0 0 24 24">
+      <path d="M3 6h18M3 12h12M3 18h8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <path d="M17 14l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vp-icon-reports" viewBox="0 0 24 24">
+      <path d="M5 4h10l4 4v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <path d="M9 11h6M9 15h6M9 7h2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="vp-icon-params" viewBox="0 0 24 24">
+      <path d="M12 8.5A3.5 3.5 0 1 0 12 15.5A3.5 3.5 0 1 0 12 8.5z" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1A7 7 0 0 0 14.7 6l-.3-2.6H9.6L9.3 6a7 7 0 0 0-1.8.9l-2.4-1-2 3.4 2 1.6a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.8.9l.3 2.6h4.8l.3-2.6a7 7 0 0 0 1.8-.9l2.4 1 2-3.4-2-1.6c.1-.3.1-.7.1-1Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vp-icon-branch" viewBox="0 0 24 24">
+      <path d="M12 4v16M12 8h6M12 16h6M6 8h0M6 16h0M18 8h0M18 16h0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <circle cx="6" cy="8" r="2.2" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <circle cx="6" cy="16" r="2.2" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <circle cx="18" cy="8" r="2.2" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <circle cx="18" cy="16" r="2.2" fill="none" stroke="currentColor" stroke-width="1.7"/>
+    </symbol>
+    <symbol id="vp-icon-accounts" viewBox="0 0 24 24">
+      <path d="M5 6h14M5 12h14M5 18h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <path d="M8 4v4M16 10v4M11 16v4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="vp-icon-managements" viewBox="0 0 24 24">
+      <rect x="3" y="5" width="18" height="3" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <rect x="3" y="11" width="18" height="3" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <rect x="3" y="17" width="18" height="3" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/>
+    </symbol>
+    <symbol id="vp-icon-cost" viewBox="0 0 24 24">
+      <path d="M6 18V9m6 9V5m6 13v-7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <path d="M4 20h16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="vp-icon-trend-up" viewBox="0 0 24 24">
+      <path d="M4 17l5-5 4 3 7-8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M15 7h5v5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vp-icon-file-plus" viewBox="0 0 24 24">
+      <path d="M5 4h10l4 4v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <path d="M15 4v4h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M12 11v6M9 14h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="vp-icon-briefcase" viewBox="0 0 24 24">
+      <path d="M4 8h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M10 13h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="vp-icon-users-plus" viewBox="0 0 24 24">
+      <circle cx="9" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <path d="M4.5 18a4.5 4.5 0 0 1 9 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <path d="M18 8v6M15 11h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="vp-icon-users" viewBox="0 0 24 24">
+      <circle cx="9" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <path d="M4.5 18a4.5 4.5 0 0 1 9 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <circle cx="16" cy="8" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
+      <path d="M19.5 18a3.5 3.5 0 0 0-7 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    </symbol>
+    <symbol id="vp-icon-shield" viewBox="0 0 24 24">
+      <path d="M12 3l7 3v5c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vp-icon-upload" viewBox="0 0 24 24">
+      <path d="M12 15V5m0 0-4 4m4-4 4 4M5 18v1a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vp-icon-bell" viewBox="0 0 24 24">
+      <path d="M7 10a5 5 0 1 1 10 0c0 5 2 6 2 6H5s2-1 2-6Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M10 19a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="vp-icon-mail" viewBox="0 0 24 24">
+      <path d="M4 7h16v10H4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="m5 8 7 6 7-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vp-icon-help" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <path d="M9.8 9a2.4 2.4 0 1 1 3.8 2c-.8.6-1.6 1.1-1.6 2.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <path d="M12 16h.01" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="vp-icon-trash" viewBox="0 0 24 24">
+      <path d="M4 7h16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <path d="M9 4h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <path d="M7 7l1 11a1 1 0 0 0 1 .9h6a1 1 0 0 0 1-.9l1-11" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M10 11v5M14 11v5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </symbol>
+  </svg>
+
+  <div id="auth-shell" class="auth-shell active">
+    <div class="auth-panel">
+      <div class="auth-copy">
+        <div class="auth-brand">
+          <img class="brand-logo brand-logo-auth" src="logo-branco.png" alt="Vecton Planning">
+        </div>
+      </div>
+
+      <form id="login-form" class="auth-form">
+        <label>
+          E-mail
+          <input id="login-email" name="email" type="email" autocomplete="username" required>
+        </label>
+        <label>
+          Senha
+          <div class="auth-password-wrap">
+            <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+            <button type="button" id="login-password-toggle" class="auth-password-toggle" aria-label="Mostrar senha" title="Mostrar senha" tabindex="-1">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </label>
+        <div class="auth-actions">
+          <button class="primary-button" type="submit">Entrar</button>
+        </div>
+        <p id="login-feedback" class="auth-feedback"></p>
+      </form>
+    </div>
+  </div>
+
+  <div class="app-layout">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-top">
+        <div class="brand-row">
+          <img class="brand-logo brand-logo-sidebar" src="logo-branco.png" alt="Vecton Planning">
+        </div>
+
+        <button id="profile-trigger" class="user-card profile-trigger" type="button">
+          <div id="user-avatar" class="avatar-block">RG</div>
+          <div class="user-copy">
+            <strong id="user-name" class="user-name">Rafael Guimaraes</strong>
+          </div>
+        </button>
+      </div>
+
+      <nav class="nav-panel" aria-label="Menu principal">
+        <div class="menu-group">
+          <button class="menu-button active" type="button" data-view="dashboard">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-dashboard"></use></svg>
+            <span class="menu-item">Dashboard</span>
+          </button>
+          <button class="menu-button menu-button--soon" type="button" data-view="planning" disabled>
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-planning"></use></svg>
+            <span class="menu-item">Planejamento</span>
+          </button>
+          <button class="menu-button" type="button" data-view="reports">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-reports"></use></svg>
+            <span class="menu-item">Relatorios</span>
+          </button>
+          <div class="menu-stack">
+            <button id="params-toggle" class="menu-button menu-button-group" type="button" aria-expanded="false">
+              <span class="menu-button-leading">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-params"></use></svg>
+                <span class="menu-item">Parâmetros</span>
+              </span>
+              <span id="params-caret" class="menu-caret" style="display:none">−</span>
+            </button>
+            <div id="params-submenu" class="menu-submenu">
+              <button class="submenu-button" type="button" data-view="users"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-users"></use></svg><span>Usuários</span></button>
+              <button class="submenu-button" type="button" data-view="accessProfiles"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-shield"></use></svg><span>Perfis de Acesso</span></button>
+              <!-- Demais parâmetros -->
+              <button class="submenu-button" type="button" data-view="branchPlan"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-branch"></use></svg><span>Empresas</span></button>
+              <button class="submenu-button" type="button" data-view="drePlan"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-accounts"></use></svg><span>Plano de Contas</span></button>
+              <button class="submenu-button" type="button" data-view="managements"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-managements"></use></svg><span>Gestões</span></button>
+              <button class="submenu-button" type="button" data-view="ccPlan"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-cost"></use></svg><span>Centro de Custos</span></button>
+              <button class="submenu-button" type="button" data-view="actualsLoad"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-upload"></use></svg><span>Carga de Realizado</span></button>
+              <button class="submenu-button" type="button" data-view="budgetLoad"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-upload"></use></svg><span>Carga de Planejado</span></button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span id="sync-status" class="sync-status sync-status-sidebar">Banco de Dados Online</span>
+        <button id="logout-button" class="logout-button logout-button-round" type="button" aria-label="Sair">⏻</button>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <header class="main-header">
+        <div class="header-left">
+          <img class="header-brand-logo" src="logo-branco.png" alt="Vecton Planning">
+          <button id="sidebar-toggle" class="header-toggle" type="button" aria-label="Ocultar ou exibir menu lateral">
+            <svg class="hamburger-icon" viewBox="0 0 20 14" width="20" height="14" fill="none" aria-hidden="true">
+              <rect x="0" y="0"  width="20" height="2" rx="1" fill="currentColor"/>
+              <rect x="0" y="6"  width="20" height="2" rx="1" fill="currentColor"/>
+              <rect x="0" y="12" width="20" height="2" rx="1" fill="currentColor"/>
+            </svg>
+          </button>
+          <div class="header-search-wrap">
+            <label class="header-search">
+              <span class="header-search-icon">⌕</span>
+              <input type="text" placeholder="Buscar no sistema...">
+              <span class="header-search-key">Ctrl K</span>
+            </label>
+          </div>
+          <div class="header-view-inline">
+            <span id="view-kicker" class="header-view-kicker">DASHBOARD</span>
+            <span class="header-view-separator">&ndash;</span>
+            <strong id="view-title" class="header-view-title">Visão geral</strong>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="header-icon-button" type="button" aria-label="Notificacoes"><svg class="header-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-bell"></use></svg></button>
+          <button class="header-icon-button" type="button" aria-label="Mensagens"><svg class="header-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-mail"></use></svg></button>
+          <button class="header-icon-button" type="button" aria-label="Ajuda"><svg class="header-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-help"></use></svg></button>
+          <select class="header-select">
+            <option>Vecton Planning</option>
+            <option>Marcher Brasil</option>
+          </select>
+          <div id="opex-gestao-slot" hidden></div>
+          <div class="period-picker">
+            <button id="period-trigger" class="header-select header-select-small period-trigger" type="button" aria-haspopup="dialog" aria-expanded="false">
+              <strong id="period-trigger-label" class="period-trigger-combined">Jun/2026</strong>
+            </button>
+            <div id="period-popover" class="period-popover" hidden>
+              <div class="period-popover-header">
+                <button id="period-prev-year" class="period-nav-button" type="button" aria-label="Ano anterior">‹</button>
+                <strong id="period-year-label">2026</strong>
+                <button id="period-next-year" class="period-nav-button" type="button" aria-label="Proximo ano">›</button>
+              </div>
+              <p class="period-popover-caption">Selecione o ano base do relatorio e o mes em foco da analise.</p>
+              <div id="period-month-grid" class="period-month-grid"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="market-ticker" id="market-ticker">
+        <div class="market-ticker-track" id="market-ticker-track"></div>
+      </div>
+
+      <section id="dashboard-view" class="content-view active">
+        <div class="kpi-grid">
+          <article class="kpi-card">
+            <span class="kpi-label">Receita Líquida</span>
+            <strong class="kpi-value"><span id="kpi-rl-currency" class="kpi-currency">R$</span><span id="kpi-rl-number" class="kpi-number">—</span></strong>
+            <span id="kpi-rl-trend" class="kpi-trend neutral">Carregando...</span>
+            <div id="kpi-rl-spark" class="sparkline sparkline-blue"></div>
+          </article>
+          <article class="kpi-card">
+            <span class="kpi-label">% Material</span>
+            <strong class="kpi-value"><span id="kpi-mat-number" class="kpi-number">—</span></strong>
+            <span id="kpi-mat-trend" class="kpi-trend neutral">Carregando...</span>
+            <div id="kpi-mat-spark" class="sparkline sparkline-cyan"></div>
+          </article>
+          <article class="kpi-card">
+            <span class="kpi-label">EBITDA</span>
+            <strong class="kpi-value"><span id="kpi-ebitda-currency" class="kpi-currency">R$</span><span id="kpi-ebitda-number" class="kpi-number">—</span></strong>
+            <span id="kpi-ebitda-trend" class="kpi-trend neutral">Carregando...</span>
+            <div id="kpi-ebitda-spark" class="sparkline sparkline-green"></div>
+          </article>
+          <article class="kpi-card">
+            <span class="kpi-label">Margem EBITDA</span>
+            <strong class="kpi-value"><span id="kpi-mebitda-number" class="kpi-number">—</span></strong>
+            <span id="kpi-mebitda-trend" class="kpi-trend neutral">Carregando...</span>
+            <div id="kpi-mebitda-spark" class="sparkline sparkline-violet"></div>
+          </article>
+          <article class="kpi-card">
+            <span class="kpi-label">Lucro Líquido</span>
+            <strong class="kpi-value"><span id="kpi-ll-currency" class="kpi-currency">R$</span><span id="kpi-ll-number" class="kpi-number">—</span></strong>
+            <span id="kpi-ll-trend" class="kpi-trend neutral">Carregando...</span>
+            <div id="kpi-ll-spark" class="sparkline sparkline-amber"></div>
+          </article>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="content-card dashboard-panel dash-dre-panel">
+            <div class="panel-header">
+              <div>
+                <h3 id="dash-dre-title">Demonstrativo de Resultados</h3>
+                <p id="dash-dre-subtitle">Realizado vs Budget — mês em foco.</p>
+              </div>
+              <button id="dash-ver-dre" class="ghost-button" type="button">Ver DRE completa</button>
+            </div>
+            <div id="dash-dre-bullet" class="dash-dre-bullet"></div>
+            <div id="dash-dre-gauges" class="dash-dre-gauges"></div>
+          </div>
+
+          <div class="dash-charts-stack">
+            <div class="content-card dashboard-panel dash-combo-card" id="dash-mat-card">
+              <div class="panel-header">
+                <div><h3>Matéria-prima</h3></div>
+              </div>
+              <div id="dash-mat-chart" class="dash-chart-area dash-chart-area--combo"></div>
+            </div>
+
+            <div class="content-card dashboard-panel dash-combo-card" id="dash-ebitda-card">
+              <div class="panel-header">
+                <div><h3>EBITDA</h3></div>
+              </div>
+              <div id="dash-ebitda-chart" class="dash-chart-area dash-chart-area--combo"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Novos cards: Opex por Gestão + Headcount -->
+        <div class="dash-bottom-row">
+
+          <!-- Card 1: Gastos Operacionais (donut) -->
+          <div class="content-card dashboard-panel dash-opex-donut-card" id="dash-opex-donut-card">
+            <div class="dash-opex-donut-header">
+              <span class="dash-opex-donut-kicker">Gastos Operacionais</span>
+            </div>
+            <div class="dash-opex-donut-body">
+              <div id="dash-opex-donut-chart" class="dash-opex-donut-area"></div>
+              <div id="dash-opex-donut-legend" class="dash-opex-donut-legend"></div>
+            </div>
+          </div>
+
+          <!-- Card 2: Headcount -->
+          <div class="content-card dashboard-panel dash-hc-card" id="dash-hc-card">
+            <div class="dash-hc-header">
+              <span class="dash-hc-title">HEADCOUNT</span>
+              <div id="dash-hc-filter" class="dash-opex-filter"></div>
+            </div>
+            <div class="dash-hc-body">
+              <div class="dash-hc-kpi-row">
+                <div class="dash-hc-kpi-block">
+                  <div class="dash-hc-kpi-value-row">
+                    <span id="dash-hc-total" class="dash-hc-kpi-value">—</span>
+                    <span id="dash-hc-colab-label" class="dash-hc-kpi-colab"></span>
+                  </div>
+                  <span id="dash-hc-cpp" class="dash-hc-kpi-cpp"></span>
+                </div>
+              </div>
+              <div id="dash-hc-line-chart" class="dash-hc-line-area"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="dashboard-bottom-spacer" aria-hidden="true"></div>
+
+      </section>
+
+      <section id="reports-view" class="content-view">
+        <div class="reports-layout">
+          <div class="reports-catalog-card">
+            <div class="reports-catalog-header">
+              <h2 class="reports-catalog-title">Central de Relatórios</h2>
+              <button id="reports-reorder-btn" class="reports-reorder-btn" type="button" style="display:none" title="Reorganizar cards">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                Reorganizar
+              </button>
+            </div>
+            <div id="reports-card-grid" class="reports-card-grid">
+
+              <button class="reports-report-card" type="button" data-report-id="dreSocReal">
+                <div class="rrc-top">
+                  <span class="rrc-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-cost"></use></svg></span>
+                  <span class="rrc-fav" role="button" data-fav-id="dreSocReal" aria-label="Favoritar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                </div>
+                <strong class="rrc-label">DRE Societário Real</strong>
+                <span class="rrc-subtitle"></span>
+                <span class="rrc-edit-btn" role="button" data-edit-card="dreSocReal" aria-label="Editar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+              </button>
+
+              <button class="reports-report-card" type="button" data-report-id="dreGerReal">
+                <div class="rrc-top">
+                  <span class="rrc-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-trend-up"></use></svg></span>
+                  <span class="rrc-fav" role="button" data-fav-id="dreGerReal" aria-label="Favoritar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                </div>
+                <strong class="rrc-label">DRE Gerencial Real</strong>
+                <span class="rrc-subtitle"></span>
+                <span class="rrc-edit-btn" role="button" data-edit-card="dreGerReal" aria-label="Editar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+              </button>
+
+              <button class="reports-report-card" type="button" data-report-id="dreDfsReal">
+                <div class="rrc-top">
+                  <span class="rrc-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-reports"></use></svg></span>
+                  <span class="rrc-fav" role="button" data-fav-id="dreDfsReal" aria-label="Favoritar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                </div>
+                <strong class="rrc-label">DRE DFs Real</strong>
+                <span class="rrc-subtitle"></span>
+                <span class="rrc-edit-btn" role="button" data-edit-card="dreDfsReal" aria-label="Editar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+              </button>
+
+              <button class="reports-report-card" type="button" data-report-id="dreSocBudget">
+                <div class="rrc-top">
+                  <span class="rrc-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-cost"></use></svg></span>
+                  <span class="rrc-fav" role="button" data-fav-id="dreSocBudget" aria-label="Favoritar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                </div>
+                <strong class="rrc-label">DRE Societário Budget</strong>
+                <span class="rrc-subtitle"></span>
+                <span class="rrc-edit-btn" role="button" data-edit-card="dreSocBudget" aria-label="Editar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+              </button>
+
+              <button class="reports-report-card" type="button" data-report-id="dreGerBudget">
+                <div class="rrc-top">
+                  <span class="rrc-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-trend-up"></use></svg></span>
+                  <span class="rrc-fav" role="button" data-fav-id="dreGerBudget" aria-label="Favoritar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                </div>
+                <strong class="rrc-label">DRE Gerencial Budget</strong>
+                <span class="rrc-subtitle"></span>
+                <span class="rrc-edit-btn" role="button" data-edit-card="dreGerBudget" aria-label="Editar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+              </button>
+
+              <button class="reports-report-card" type="button" data-report-id="dreDfsBudget">
+                <div class="rrc-top">
+                  <span class="rrc-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-file-plus"></use></svg></span>
+                  <span class="rrc-fav" role="button" data-fav-id="dreDfsBudget" aria-label="Favoritar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                </div>
+                <strong class="rrc-label">DRE DFs Budget</strong>
+                <span class="rrc-subtitle"></span>
+                <span class="rrc-edit-btn" role="button" data-edit-card="dreDfsBudget" aria-label="Editar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+              </button>
+
+              <button class="reports-report-card" type="button" data-report-id="opexReal">
+                <div class="rrc-top">
+                  <span class="rrc-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-briefcase"></use></svg></span>
+                  <span class="rrc-fav" role="button" data-fav-id="opexReal" aria-label="Favoritar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                </div>
+                <strong class="rrc-label">OPEX Real</strong>
+                <span class="rrc-subtitle"></span>
+                <span class="rrc-edit-btn" role="button" data-edit-card="opexReal" aria-label="Editar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+              </button>
+
+              <button class="reports-report-card" type="button" data-report-id="opexBudget">
+                <div class="rrc-top">
+                  <span class="rrc-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-briefcase"></use></svg></span>
+                  <span class="rrc-fav" role="button" data-fav-id="opexBudget" aria-label="Favoritar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                </div>
+                <strong class="rrc-label">OPEX Planejado</strong>
+                <span class="rrc-subtitle"></span>
+                <span class="rrc-edit-btn" role="button" data-edit-card="opexBudget" aria-label="Editar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+              </button>
+
+              <button class="reports-report-card" type="button" data-report-id="headcountReal">
+                <div class="rrc-top">
+                  <span class="rrc-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-users-plus"></use></svg></span>
+                  <span class="rrc-fav" role="button" data-fav-id="headcountReal" aria-label="Favoritar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                </div>
+                <strong class="rrc-label">Headcount Realizado</strong>
+                <span class="rrc-subtitle"></span>
+                <span class="rrc-edit-btn" role="button" data-edit-card="headcountReal" aria-label="Editar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+              </button>
+
+              <button class="reports-report-card" type="button" data-report-id="headcountBudget">
+                <div class="rrc-top">
+                  <span class="rrc-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-users-plus"></use></svg></span>
+                  <span class="rrc-fav" role="button" data-fav-id="headcountBudget" aria-label="Favoritar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                </div>
+                <strong class="rrc-label">Headcount Planejado</strong>
+                <span class="rrc-subtitle"></span>
+                <span class="rrc-edit-btn" role="button" data-edit-card="headcountBudget" aria-label="Editar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+              </button>
+
+            </div>
+          </div>
+
+          <div class="content-card reports-table-card">
+            <div id="reports-dre-table-wrap" class="reports-table-wrap">
+              <div class="actuals-empty">Preparando relatório...</div>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-bottom-spacer" aria-hidden="true"></div>
+      </section>
+
+      <section id="branchPlan-view" class="content-view">
+        <div class="dre-workspace branch-workspace">
+          <div class="content-card tree-panel">
+            <div class="card-toolbar">
+              <button id="branch-add-node" class="primary-button compact-button" type="button">Adicionar</button>
+              <span class="toolbar-note">Cadastre as empresas e filiais que alimentarao o realizado.</span>
+            </div>
+            <div id="branch-tree" class="dre-tree"></div>
+          </div>
+
+          <div id="branch-resizer" class="dre-resizer" aria-hidden="true"></div>
+
+          <div class="content-card editor-panel">
+            <div class="editor-header">
+              <p class="section-kicker">Editor</p>
+              <h4 id="branch-editor-title">Selecione uma empresa</h4>
+            </div>
+
+            <form id="branch-node-form" class="form-grid">
+              <label>
+                Codigo
+                <input id="branch-node-code" name="code" type="text" maxlength="2" required>
+              </label>
+              <label>
+                Escopo
+                <input id="branch-node-scope" type="text" value="Empresa / Filial" disabled>
+              </label>
+              <label class="full-span">
+                Nome
+                <input id="branch-node-name" name="name" type="text" required>
+              </label>
+              <label>
+                Origem
+                <input id="branch-node-origin" type="text" disabled>
+              </label>
+              <label>
+                Estrutura
+                <input id="branch-node-parent" type="text" value="Empresa / Filial" disabled>
+              </label>
+              <label class="full-span">
+                Observacao visual
+                <textarea id="branch-node-note" rows="4" placeholder="Espaco reservado para futuras propriedades da empresa ou filial"></textarea>
+              </label>
+              <div class="editor-actions full-span">
+                <button class="primary-button" type="submit">Salvar</button>
+                <button id="branch-delete-node" class="delete-button secondary-danger" type="button">Remover</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="drePlan-view" class="content-view">
+        <div class="dre-workspace">
+          <div class="content-card tree-panel">
+            <div class="card-toolbar">
+              <button id="dre-add-node" class="primary-button compact-button" type="button">Adicionar</button>
+              <span class="toolbar-note">Arraste um item para realocar na arvore</span>
+            </div>
+            <div id="dre-tree" class="dre-tree"></div>
+          </div>
+
+          <div id="dre-resizer" class="dre-resizer" aria-hidden="true"></div>
+
+          <div class="content-card editor-panel">
+            <div class="editor-header">
+              <p class="section-kicker">Editor</p>
+              <h4 id="dre-editor-title">Selecione uma conta</h4>
+            </div>
+
+            <form id="dre-node-form" class="form-grid">
+              <label>
+                Estrutura
+                <input id="dre-node-code" name="code" type="text" required>
+              </label>
+              <label>
+                Classe
+                <select id="dre-node-class" name="class">
+                  <option value="Sintetica">Sintetica</option>
+                  <option value="Analitica">Analitica</option>
+                </select>
+              </label>
+              <label class="full-span">
+                Nome
+                <input id="dre-node-name" name="name" type="text" required>
+              </label>
+              <label>
+                Origem
+                <input id="dre-node-origin" type="text" disabled>
+              </label>
+              <label>
+                Pai atual
+                <input id="dre-node-parent" type="text" disabled>
+              </label>
+              <label class="full-span">
+                Observacao visual
+                <textarea id="dre-node-note" rows="4" placeholder="Espaco reservado para futuras propriedades da conta"></textarea>
+              </label>
+              <div class="editor-actions full-span">
+                <button class="primary-button" type="submit">Salvar</button>
+                <button id="dre-delete-node" class="delete-button secondary-danger" type="button">Remover</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="managements-view" class="content-view">
+        <div class="mgmt-view">
+          <div class="content-card mgmt-card">
+            <div class="mgmt-card-header">
+              <span class="mgmt-card-title">Gestões cadastradas</span>
+              <button class="primary-button" id="mgmt-add-btn" type="button">+ Nova gestão</button>
+            </div>
+            <div id="mgmt-list" class="mgmt-list">
+              <span class="mgmt-empty">Carregando...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="ccPlan-view" class="content-view">
+        <div class="dre-workspace cc-workspace">
+          <div class="content-card tree-panel">
+            <div class="card-toolbar">
+              <button id="cc-add-node" class="primary-button compact-button" type="button">Adicionar</button>
+              <span class="toolbar-note">Arraste um item para realocar na arvore</span>
+            </div>
+            <div id="cc-tree" class="dre-tree"></div>
+          </div>
+
+          <div id="cc-resizer" class="dre-resizer" aria-hidden="true"></div>
+
+          <div class="content-card editor-panel">
+            <div class="editor-header">
+              <p class="section-kicker">Editor</p>
+              <h4 id="cc-editor-title">Selecione um centro de custos</h4>
+            </div>
+
+            <form id="cc-node-form" class="form-grid">
+              <label>
+                Estrutura
+                <input id="cc-node-code" name="code" type="text" required>
+              </label>
+              <label>
+                Tipo
+                <select id="cc-node-type" name="type">
+                  <option value="ADM">ADM</option>
+                  <option value="COM">COM</option>
+                  <option value="MOI">MOI</option>
+                  <option value="MOD">MOD</option>
+                  <option value="ENG">ENG</option>
+                </select>
+              </label>
+              <label>
+                Nome
+                <input id="cc-node-name" name="name" type="text" required>
+              </label>
+              <label>
+                Gestao
+                <select id="cc-node-management" name="management">
+                  <option value="">Selecione</option>
+                  <option value="Diretoria">Diretoria</option>
+                  <option value="Controladoria">Controladoria</option>
+                  <option value="Recursos Humanos">Recursos Humanos</option>
+                  <option value="Supply Chain">Supply Chain</option>
+                  <option value="Industrial">Industrial</option>
+                  <option value="Engenharia">Engenharia</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Produto">Produto</option>
+                  <option value="Qualidade">Qualidade</option>
+                  <option value="Comercial">Comercial</option>
+                </select>
+              </label>
+              <label>
+                Classe
+                <input id="cc-node-class" type="text" disabled>
+              </label>
+              <label>
+                Pai atual
+                <input id="cc-node-parent" type="text" disabled>
+              </label>
+              <label class="full-span">
+                Observacao visual
+                <textarea id="cc-node-note" rows="4" placeholder="Espaco reservado para futuras propriedades do centro de custos"></textarea>
+              </label>
+              <div class="editor-actions full-span">
+                <button class="primary-button" type="submit">Salvar</button>
+                <button id="cc-delete-node" class="delete-button secondary-danger" type="button">Remover</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+            <section id="actualsLoad-view" class="content-view"></section>
+
+      <section id="budgetLoad-view" class="content-view"></section>
+      <section id="headcountLoad-view" class="content-view"></section>
+
+      <section id="users-view" class="content-view">
+        <div class="users-shell">
+          <div class="users-header">
+            <div>
+              <h2 class="users-title">Usuários</h2>
+              <p class="users-subtitle">Gerencie os usuários com acesso ao VectonPlan.</p>
+            </div>
+            <button id="users-invite-btn" class="primary-button" type="button">+ Convidar usuário</button>
+          </div>
+
+          <div class="content-card users-table-card">
+            <table class="data-table users-table">
+              <thead>
+                <tr>
+                  <th>Usuário</th>
+                  <th>E-mail</th>
+                  <th>Departamento</th>
+                  <th>Perfil de Acesso</th>
+                  <th>Status</th>
+                  <th class="users-col-actions"></th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body">
+                <tr>
+                  <td>
+                    <div class="users-name-cell">
+                      <span class="users-avatar">RG</span>
+                      <span class="users-name-text">Ricardo Guimarães</span>
+                    </div>
+                  </td>
+                  <td><span class="users-email-text">ricardo@marcher.com.br</span></td>
+                  <td><span class="users-email-text">Controladoria e Finanças</span></td>
+                  <td><span class="users-badge">Super Admin</span></td>
+                  <td><span class="users-status-active">● Ativo</span></td>
+                  <td>
+                    <div class="users-actions">
+                      <button class="users-action-btn users-action-resend" type="button" title="Reenviar senha">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4v5h5"/><path d="M20 20v-5h-5"/><path d="M4.6 9A9 9 0 1 1 4 15"/></svg>
+                      </button>
+                      <button class="users-action-btn" type="button" title="Editar usuário">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button class="users-action-btn users-action-delete" type="button" title="Excluir usuário">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="accessProfiles-view" class="content-view">
+        <div class="ap-shell">
+
+          <div class="ap-header">
+            <div>
+              <h2 class="ap-title">Perfis de Acesso</h2>
+              <p class="ap-subtitle">Defina o que cada perfil pode ver e fazer no VectonPlan.</p>
+            </div>
+          </div>
+
+          <div class="ap-grid">
+
+            <!-- Super Admin -->
+            <div class="ap-card ap-card--superadmin">
+              <div class="ap-card-top">
+                <div class="ap-badge ap-badge--superadmin">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  Super Admin
+                </div>
+                <span class="ap-user-count" id="ap-count-superadmin">1 usuário</span>
+              </div>
+              <p class="ap-description">Acesso irrestrito. Único perfil que pode promover ou rebaixar outros Super Admins. Reservado ao desenvolvedor/dono do sistema.</p>
+              <ul class="ap-perms">
+                <li class="ap-perm ap-perm--yes">Dashboard e cockpit consolidado</li>
+                <li class="ap-perm ap-perm--yes">Todos os relatórios e drill-down</li>
+                <li class="ap-perm ap-perm--yes">Parâmetros e carga de dados</li>
+                <li class="ap-perm ap-perm--yes">Gerenciar usuários e perfis</li>
+                <li class="ap-perm ap-perm--yes">Promover / rebaixar Super Admin</li>
+              </ul>
+              <div class="ap-card-footer">
+                <button class="ap-users-btn" type="button" data-profile="super_admin">Ver usuários →</button>
+              </div>
+            </div>
+
+            <!-- Admin -->
+            <div class="ap-card ap-card--admin">
+              <div class="ap-card-top">
+                <div class="ap-badge ap-badge--admin">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z"/></svg>
+                  Admin
+                </div>
+                <span class="ap-user-count" id="ap-count-admin">— usuários</span>
+              </div>
+              <p class="ap-description">Acesso total aos dados e configurações. Pode gerenciar usuários e promover Gestores e Analistas, mas não pode alterar Super Admins.</p>
+              <ul class="ap-perms">
+                <li class="ap-perm ap-perm--yes">Dashboard e cockpit consolidado</li>
+                <li class="ap-perm ap-perm--yes">Todos os relatórios e drill-down</li>
+                <li class="ap-perm ap-perm--yes">Parâmetros e carga de dados</li>
+                <li class="ap-perm ap-perm--yes">Gerenciar usuários e perfis</li>
+                <li class="ap-perm ap-perm--no">Alterar Super Admins</li>
+              </ul>
+              <div class="ap-card-footer">
+                <button class="ap-users-btn" type="button" data-profile="admin">Ver usuários →</button>
+              </div>
+            </div>
+
+            <!-- Gestor -->
+            <div class="ap-card ap-card--manager">
+              <div class="ap-card-top">
+                <div class="ap-badge ap-badge--manager">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3"/><path d="M4.5 18a4.5 4.5 0 0 1 9 0"/><circle cx="17" cy="8" r="2.5" opacity=".5"/><path d="M20 18a3.5 3.5 0 0 0-7 0" opacity=".5"/></svg>
+                  Gestor
+                </div>
+                <span class="ap-user-count" id="ap-count-manager">— usuários</span>
+              </div>
+              <p class="ap-description">Enxerga o resultado consolidado da empresa no cockpit e DRE. Drill-down limitado à sua área de gestão. Pode ter contas matriciais que atravessam todos os CCs.</p>
+              <ul class="ap-perms">
+                <li class="ap-perm ap-perm--yes">Dashboard e cockpit consolidado</li>
+                <li class="ap-perm ap-perm--yes">DRE consolidado (somente leitura)</li>
+                <li class="ap-perm ap-perm--partial">Drill-down — apenas CCs da sua gestão</li>
+                <li class="ap-perm ap-perm--partial">Contas matriciais configuráveis</li>
+                <li class="ap-perm ap-perm--no">Parâmetros, carga ou usuários</li>
+              </ul>
+              <div class="ap-card-footer">
+                <button class="ap-users-btn" type="button" data-profile="manager">Ver usuários →</button>
+              </div>
+            </div>
+
+            <!-- Analista -->
+            <div class="ap-card ap-card--analyst">
+              <div class="ap-card-top">
+                <div class="ap-badge ap-badge--analyst">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+                  Analista
+                </div>
+                <span class="ap-user-count" id="ap-count-analyst">— usuários</span>
+              </div>
+              <p class="ap-description">Acesso restrito à sua área de gestão. Não visualiza resultado consolidado da empresa — apenas relatórios e drill-down dos centros de custo da sua área.</p>
+              <ul class="ap-perms">
+                <li class="ap-perm ap-perm--no">Dashboard e cockpit consolidado</li>
+                <li class="ap-perm ap-perm--no">DRE consolidado da empresa</li>
+                <li class="ap-perm ap-perm--partial">Relatórios — apenas CCs da sua gestão</li>
+                <li class="ap-perm ap-perm--partial">Contas matriciais configuráveis</li>
+                <li class="ap-perm ap-perm--no">Parâmetros, carga ou usuários</li>
+              </ul>
+              <div class="ap-card-footer">
+                <button class="ap-users-btn" type="button" data-profile="analyst">Ver usuários →</button>
+              </div>
+            </div>
+
+          </div><!-- /ap-grid -->
+
+          <!-- Legenda -->
+          <div class="ap-legend">
+            <span class="ap-perm ap-perm--yes ap-legend-item">Acesso total</span>
+            <span class="ap-perm ap-perm--partial ap-legend-item">Acesso parcial / configurável</span>
+            <span class="ap-perm ap-perm--no ap-legend-item">Sem acesso</span>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ── POPOVER PERFIL ──────────────────────────────────────────────── -->
+  <dialog id="profile-dialog" class="profile-dialog" aria-labelledby="profile-dialog-title">
+    <div class="profile-dialog-inner">
+
+      <header class="profile-dialog-header">
+        <div>
+          <p class="section-kicker">PERFIL</p>
+          <h4 id="profile-dialog-title">Meu perfil</h4>
+        </div>
+        <button id="profile-dialog-close" class="icon-button profile-dialog-close" type="button" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+
+      <!-- Prévia do perfil -->
+      <div class="profile-dialog-preview">
+        <button id="profile-photo-trigger" class="profile-photo-preview" type="button">RG</button>
+        <div class="profile-preview-copy">
+          <strong id="profile-preview-name">Rafael Guimaraes</strong>
+          <span id="profile-preview-role">Administrador</span>
+        </div>
+        <div class="profile-upload-hint">Clique na foto para fazer upload</div>
+      </div>
+
+      <form id="profile-form" class="profile-dialog-form">
+        <input id="profile-photo-file" name="photoFile" type="file" accept="image/*" style="display:none">
+
+        <div class="profile-dialog-fields">
+          <label class="profile-field-full">
+            <span class="field-label">Nome de exibição</span>
+            <input id="profile-name" name="name" type="text" required placeholder="Seu nome completo">
+          </label>
+
+          <label class="profile-field-full profile-field-readonly">
+            <span class="field-label">
+              E-mail
+              <span class="field-badge">Imutável</span>
+            </span>
+            <input id="profile-email" name="email" type="email" required readonly tabindex="-1">
+          </label>
+
+          <label class="profile-field-half">
+            <span class="field-label">Telefone</span>
+            <input id="profile-phone" name="phone" type="tel" placeholder="11-999999999" maxlength="12">
+          </label>
+
+          <label class="profile-field-half">
+            <span class="field-label">Departamento</span>
+            <input id="profile-department" name="department" type="text" placeholder="Administrativo">
+          </label>
+
+          <label class="profile-field-full profile-field-readonly">
+            <span class="field-label">
+              Perfil de acesso
+              <span class="field-badge">Gerenciado pelo ADM</span>
+            </span>
+            <input id="profile-role" name="role" type="text" value="Administrador" readonly tabindex="-1">
+          </label>
+        </div>
+
+        <!-- Acessos Disponíveis -->
+        <div class="profile-dialog-access-section">
+          <div class="profile-access-header">
+            <strong>Acessos disponíveis</strong>
+            <span>Somente leitura — gerenciado pelo administrador.</span>
+          </div>
+          <div class="profile-access-trees" id="profile-access-trees">
+            <!-- renderizado por renderAccessTrees() -->
+          </div>
+        </div>
+
+        <footer class="profile-dialog-footer">
+          <button class="ghost-button" type="button" id="profile-dialog-cancel">Cancelar</button>
+          <button class="primary-button" type="submit">Salvar perfil</button>
+        </footer>
+      </form>
+
+    </div>
+  </dialog>
+  <!-- ── FIM POPOVER PERFIL ──────────────────────────────────────────── -->
+
+  <script src="seed-data.js"></script>
+  <script src="dre-structure.js"></script>
+  <script src="cc-structure.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="src/core/constants.js"></script>
+  <script src="src/core/utils.js"></script>
+  <script src="src/core/storage.js"></script>
+  <script src="src/modules/auth/authSession.js"></script>
+  <script src="src/modules/actuals/actualsModule.js"></script>
+  <script src="src/modules/budget/budgetModule.js"></script>
+  <script src="src/modules/navigation/navigationModule.js"></script>
+  <script src="src/modules/ui/headerModule.js"></script>
+  <script src="src/modules/ui/branchTreeModule.js"></script>
+  <script src="src/modules/ui/dreTreeModule.js"></script>
+  <script src="src/modules/ui/ccTreeModule.js"></script>
+    <script src="src/modules/ui/renderModule.js"></script>
+    <script src="src/modules/ui/profileDialogModule.js"></script>
+    <script src="src/modules/reports/reportsDreModule.js"></script>
+    <script src="src/modules/reports/reportsOpexModule.js"></script>
+    <script src="src/modules/reports/reportsHeadcountModule.js"></script>
+    <script src="src/modules/headcount/headcountRenderModule.js"></script>
+    <script src="src/modules/ui/shellEventsModule.js"></script>
+  <script src="src/modules/ui/editorEventsModule.js"></script>
+  <script src="src/modules/ui/dialogs.js"></script>
+  <script src="src/modules/reports/reportsHelpersModule.js"></script>
+  <script src="src/modules/users/usersModule.js"></script>
+  <script src="src/modules/params/managementsModule.js"></script>
+  <script src="src/modules/dashboard/dashboardCards.js"></script>
+  <script src="src/modules/dashboard/dashboardModule.js"></script>
+  <script src="src/modules/dashboard/dashboardVisuals.js"></script>
+  <script src="src/modules/dashboard/marketTicker.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
