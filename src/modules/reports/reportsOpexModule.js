@@ -45,9 +45,9 @@
       const allOption = "Marcher";
       const baseMgmtOptions = [allOption, ...managements];
       const prevMgmt = detailPanel.dataset.opexMgmt || allOption;
-      // Gestor/Analista: trava o seletor na própria gestão (fail-closed: sem CC → vazio).
-      const { selectedMgmt, locked: mgmtLocked } = resolveManagementFilter(prevMgmt, baseMgmtOptions, allOption);
-      const mgmtOptions = mgmtLocked ? [selectedMgmt] : baseMgmtOptions;
+      // Gestor/Analista: exibe só as gestões que o perfil tem acesso (principal + extras).
+      const { selectedMgmt, locked: mgmtLocked, allowedMgmts } = resolveManagementFilter(prevMgmt, baseMgmtOptions, allOption);
+      const mgmtOptions = mgmtLocked ? [selectedMgmt] : (allowedMgmts ? [allOption, ...allowedMgmts] : baseMgmtOptions);
       const validCcFilter = buildOpexCostCenterFilter(selectedMgmt);
 
       if (selectedMgmt !== allOption) {
