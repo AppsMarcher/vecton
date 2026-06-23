@@ -2136,6 +2136,7 @@ const REPORT_TITLES = {
         const tableEl = detailPanel.querySelector(".reports-opex-table");
         if (tableEl) initOpexDrilldown(tableEl, cached.rows, null);
       } else {
+        detailPanel.dataset.opexMgmt = selectedMgmt;
         detailPanel.innerHTML = `<div class="opex-report-wrap reports-table-wrap"><div id="opex-table-inner">${vpSkeletonTable()}</div></div>`;
         fetchActualsLedgerForCcIds(year, effectiveCcIds).then((rows) => {
           reportsLedgerCache.set(mgmtCacheKey, { rows });
