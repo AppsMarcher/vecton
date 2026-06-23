@@ -3106,7 +3106,7 @@ function renderOpexBudgetReport(detailPanel) {
       fetchBudgetLedgerForCcIds(year, effectiveCcIds)
         .then((rows) => {
           reportsLedgerCache.set(mgmtCacheKey, { rows });
-          if (selectedReportId === "opexBudget") renderReportsView();
+          if (selectedReportId === "opexBudget" && detailPanel.dataset.opexMgmt === selectedMgmt) renderReportsView();
         })
         .catch(() => {
           if (selectedReportId === "opexBudget") {
