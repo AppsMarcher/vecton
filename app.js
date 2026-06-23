@@ -1292,6 +1292,7 @@ async function hydrateFromSupabase() {
     applyReportAccess();
     initReportCardEdit();
     setSyncStatus("Banco de Dados Online", "ok");
+    if (canManageUsers()) void loadAndRenderUsers();
   } catch (error) {
     console.error(error);
     if (String(error?.message || "").includes("Sessao")) {
