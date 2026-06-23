@@ -374,16 +374,7 @@
     const percentMatch = text.match(/([+\-−]?\d+,\d{2})\s*%/);
 
     const value = parsePtBrNumber(currencyMatch?.[1] || numberMatches[0]);
-
-    // Tenta usar o % explícito do widget; se não houver (ou for zero), calcula
-    // a variação a partir dos dois primeiros preços exibidos (atual vs. anterior).
-    let pct = parsePtBrNumber(percentMatch?.[1] || "0");
-    if ((!Number.isFinite(pct) || pct === 0) && numberMatches.length >= 2) {
-      const prev = parsePtBrNumber(numberMatches[1]);
-      if (Number.isFinite(value) && Number.isFinite(prev) && prev !== 0 && value !== prev) {
-        pct = ((value - prev) / prev) * 100;
-      }
-    }
+    const pct = parsePtBrNumber(percentMatch?.[1] || "0");
 
     if (!Number.isFinite(value)) return null;
     return {
@@ -437,16 +428,56 @@
     });
   }
 
+  const CEPEA_PREV_KEY = "vecton-cepea-prev-v1";
+
+  function loadCepeaPrevCache() {
+    try { return JSON.parse(localStorage.getItem(CEPEA_PREV_KEY) || "{}"); }
+    catch { return {}; }
+  }
+
+  function saveCepeaPrevCache(cache) {
+    try { localStorage.setItem(CEPEA_PREV_KEY, JSON.stringify(cache)); }
+    catch {}
+  }
+
+  // Mantém today/prev separados para calcular variação entre dias.
+  // Se o dia mudou: today vira prev antes de ser sobrescrito.
+  // Múltiplos fetches no mesmo dia atualizam today sem tocar em prev.
+  function updateCepeaEntry(cache, id, dateStr, value) {
+    const entry = cache[id] || {};
+    if (entry.today?.date === dateStr) {
+      cache[id] = { today: { date: dateStr, value }, prev: entry.prev || null };
+    } else {
+      cache[id] = { today: { date: dateStr, value }, prev: entry.today || null };
+    }
+  }
+
   async function fetchCepea(items) {
     if (!items.length) return {};
     const output = {};
+    const prevCache = loadCepeaPrevCache();
+    const today = new Date().toISOString().slice(0, 10);
 
     await Promise.all(items.map(async (item) => {
       const quote = await loadCepeaItem(item);
       if (!quote) return;
-      output[item.id] = quote;
+
+      let pct = quote.pct || 0;
+
+      // Se o widget não forneceu %, calcula a partir do preço do dia anterior
+      // guardado em localStorage (disponível a partir da segunda abertura do app).
+      if (pct === 0) {
+        const prev = prevCache[item.id]?.prev;
+        if (prev && prev.date !== today && Number.isFinite(prev.value) && prev.value !== 0) {
+          pct = ((quote.value - prev.value) / prev.value) * 100;
+        }
+      }
+
+      updateCepeaEntry(prevCache, item.id, today, quote.value);
+      output[item.id] = { ...quote, pct };
     }));
 
+    saveCepeaPrevCache(prevCache);
     return output;
   }
 
