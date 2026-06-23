@@ -354,7 +354,10 @@
 
         // coleta extras (linhas clicáveis marcadas, não padrão)
         const getExtras = (tree) => [...panel.querySelectorAll(`.access-row[data-tree="${tree}"]`)]
-          .filter(r => r.dataset.isDefault !== "1" && r.querySelector(".access-checkbox")?.dataset.checked === "1")
+          .filter(r => {
+            const cb = r.querySelector(".access-checkbox");
+            return cb?.dataset.isDefault !== "1" && cb?.dataset.checked === "1";
+          })
           .map(r => r.dataset.rowId);
 
         const extraManagements  = getExtras("management");
