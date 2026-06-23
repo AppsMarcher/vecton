@@ -142,6 +142,27 @@
         </div>
         <p id="login-feedback" class="auth-feedback"></p>
       </form>
+
+      <form id="set-password-form" class="auth-form" style="display:none">
+        <p class="auth-setpw-intro">Bem-vindo(a)! Defina sua senha para ativar seu acesso.</p>
+        <label>
+          Nova senha
+          <div class="auth-password-wrap">
+            <input id="setpw-password" type="password" autocomplete="new-password" minlength="6" required>
+            <button type="button" id="setpw-toggle" class="auth-password-toggle" aria-label="Mostrar senha" tabindex="-1">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </label>
+        <label>
+          Confirmar senha
+          <input id="setpw-confirm" type="password" autocomplete="new-password" minlength="6" required>
+        </label>
+        <div class="auth-actions">
+          <button class="primary-button" type="submit">Definir senha e entrar</button>
+        </div>
+        <p id="setpw-feedback" class="auth-feedback"></p>
+      </form>
     </div>
   </div>
 
@@ -804,11 +825,12 @@
                 </div>
                 <span class="ap-user-count" id="ap-count-manager">— usuários</span>
               </div>
-              <p class="ap-description">Enxerga o resultado consolidado da empresa no cockpit e DRE. Drill-down limitado à sua área de gestão. Pode ter contas matriciais que atravessam todos os CCs.</p>
+              <p class="ap-description">Visão consolidada no Dashboard e DRE (somente leitura). OPEX e Headcount restritos à sua gestão, com possibilidade de liberar gestões e CCs adicionais por perfil.</p>
               <ul class="ap-perms">
                 <li class="ap-perm ap-perm--yes">Dashboard e cockpit consolidado</li>
                 <li class="ap-perm ap-perm--yes">DRE consolidado (somente leitura)</li>
-                <li class="ap-perm ap-perm--partial">Drill-down — apenas CCs da sua gestão</li>
+                <li class="ap-perm ap-perm--partial">OPEX e Headcount — restrito à gestão própria</li>
+                <li class="ap-perm ap-perm--partial">Gestões e CCs adicionais configuráveis</li>
                 <li class="ap-perm ap-perm--partial">Contas matriciais configuráveis</li>
                 <li class="ap-perm ap-perm--no">Parâmetros, carga ou usuários</li>
               </ul>
@@ -826,11 +848,12 @@
                 </div>
                 <span class="ap-user-count" id="ap-count-analyst">— usuários</span>
               </div>
-              <p class="ap-description">Acesso restrito à sua área de gestão. Não visualiza resultado consolidado da empresa — apenas relatórios e drill-down dos centros de custo da sua área.</p>
+              <p class="ap-description">Sem acesso ao Dashboard e DRE consolidados. OPEX e Headcount restritos à sua gestão, com possibilidade de liberar gestões e CCs adicionais por perfil.</p>
               <ul class="ap-perms">
                 <li class="ap-perm ap-perm--no">Dashboard e cockpit consolidado</li>
                 <li class="ap-perm ap-perm--no">DRE consolidado da empresa</li>
-                <li class="ap-perm ap-perm--partial">Relatórios — apenas CCs da sua gestão</li>
+                <li class="ap-perm ap-perm--partial">OPEX e Headcount — restrito à gestão própria</li>
+                <li class="ap-perm ap-perm--partial">Gestões e CCs adicionais configuráveis</li>
                 <li class="ap-perm ap-perm--partial">Contas matriciais configuráveis</li>
                 <li class="ap-perm ap-perm--no">Parâmetros, carga ou usuários</li>
               </ul>
