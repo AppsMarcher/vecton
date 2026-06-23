@@ -137,7 +137,7 @@
     function renderAccessTrees(user) {
       const wrap = document.createElement("div");
       wrap.className = "ue-trees";
-      wrap.append(renderBranchTree(user), renderAccountTree(user), renderCcTree(user), renderReportTree(user));
+      wrap.append(renderManagementTree(user), renderBranchTree(user), renderAccountTree(user), renderCcTree(user), renderReportTree(user));
       return wrap;
     }
 
@@ -168,6 +168,10 @@
 
     function isExtraAccount(user, accountCode) {
       return (user.extra_account_codes || []).includes(accountCode);
+    }
+
+    function isExtraManagement(user, mgmtName) {
+      return (user.extra_managements || []).includes(mgmtName);
     }
 
     function buildAccessRow(id, label, checked, isDefault) {
@@ -241,6 +245,24 @@
 
       section.append(header, body);
       return section;
+    }
+
+    function renderManagementTree(user) {
+      const ownMgmt = user.management || "";
+      const isRestricted = ["manager", "analyst"].includes(user.access_role);
+      const icon = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><rect x="1" y="16" width="6" height="4" rx="1"/><rect x="9" y="16" width="6" height="4" rx="1"/><rect x="17" y="16" width="6" height="4" rx="1"/><path d="M4 16v-4h16v4M12 6v6"/></svg>`;
+      const allMgmts = [...new Set(
+        (state.costCenters || []).map(cc => (cc.management || "").trim()).filter(Boolean)
+      )].sort();
+      return makeTree("management", icon, "Gestões", () =>
+        allMgmts.map((name) => {
+          const isDefault = isRestricted ? name === ownMgmt : true;
+          const isExtra = isExtraManagement(user, name);
+          const row = buildAccessRow(name, name, isDefault || isExtra, isDefault);
+          row.dataset.tree = "management";
+          return row;
+        })
+      );
     }
 
     function renderBranchTree(user) {
@@ -335,6 +357,7 @@
           .filter(r => r.dataset.isDefault !== "1" && r.querySelector(".access-checkbox")?.dataset.checked === "1")
           .map(r => r.dataset.rowId);
 
+        const extraManagements  = getExtras("management");
         const extraBranchIds    = getExtras("branch");
         const extraCcIds        = getExtras("cc");
         const extraAccountCodes = getExtras("account");
@@ -350,6 +373,7 @@
           department:         dept,
           access_role:        role,
           management:         mgmt || null,
+          extra_managements:  extraManagements,
           extra_branch_ids:   extraBranchIds,
           extra_cc_ids:       extraCcIds,
           extra_account_codes: extraAccountCodes,
@@ -386,7 +410,7 @@
         const orgId = await resolveOrganizationId();
         const rows = await fetchSupabaseRowsSafe(
           "user_profiles",
-          `organization_id=eq.${orgId}&select=id,user_id,full_name,email,department,access_role,management,extra_branch_ids,extra_cc_ids,extra_account_codes,extra_report_ids,photo_kind,photo_value&order=full_name.asc`
+          `organization_id=eq.${orgId}&select=id,user_id,full_name,email,department,access_role,management,extra_managements,extra_branch_ids,extra_cc_ids,extra_account_codes,extra_report_ids,photo_kind,photo_value&order=full_name.asc`
         );
 
         allUsers = rows || [];
