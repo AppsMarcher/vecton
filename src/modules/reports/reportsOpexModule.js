@@ -14,6 +14,7 @@
       buildOpexRealTableMarkup,
       initOpexDrilldown,
       initAllReportTableResizers,
+      initFloatingScrollbar,
       fetchActualsLedgerWithCcForYear,
       fetchActualsLedgerForManagementYear,
       renderReportsView,
@@ -24,13 +25,14 @@
     function renderSelectedOpexReport(detailPanel, selectedReportId) {
       if (selectedReportId === "opexBudget") {
         renderOpexBudgetReport(detailPanel);
-        return true;
-      }
-      if (selectedReportId === "opexReal") {
+      } else if (selectedReportId === "opexReal") {
         renderOpexRealReport(detailPanel);
-        return true;
+      } else {
+        return false;
       }
-      return false;
+      const wrap = detailPanel.querySelector(".reports-table-wrap");
+      if (wrap) initFloatingScrollbar(wrap);
+      return true;
     }
 
     function renderOpexRealReport(detailPanel) {
