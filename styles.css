@@ -113,6 +113,13 @@ textarea {
   gap: 14px;
 }
 
+.auth-setpw-intro {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  line-height: 1.4;
+}
+
 /* Campo de senha com olhinho (mostrar/ocultar) */
 .auth-password-wrap {
   position: relative;
