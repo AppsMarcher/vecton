@@ -3024,22 +3024,19 @@ function buildDreDfsRealTableMarkup(report) {
 // ─── FIM DRE DFs ──────────────────────────────────────────────────────────────
 
 // ─── OPEX REAL ────────────────────────────────────────────────────────────────
-// ── OPEX Planejado: espelha estrutura do OPEX Real usando cache de budget ───
+// ── OPEX Planejado: espelho exato do OPEX Real, apontando para tabelas de budget ─
 function renderOpexBudgetReport(detailPanel) {
   const year = Number(state.currentPeriod?.year || 2026);
 
-  // ── Filtro Gestão (mesma dinâmica do OPEX Real) ────────────────────────────
   const managements = [...new Set(
     state.costCenters.map((cc) => (cc.management || "").trim()).filter(Boolean)
   )].sort();
-  const allOption  = "Marcher";
+  const allOption = "Marcher";
   const baseMgmtOptions = [allOption, ...managements];
-  const prevMgmt   = detailPanel.dataset.opexMgmt || allOption;
-  const { selectedMgmt, locked: mgmtLocked, allowedMgmts } = resolveManagementFilter(prevMgmt, baseMgmtOptions, allOption);
-  const mgmtOptions = mgmtLocked ? [selectedMgmt] : (allowedMgmts || baseMgmtOptions);
-  const validCcFilter = buildEffectiveOpexFilter(selectedMgmt);
+  const prevMgmt = detailPanel.dataset.opexMgmt || allOption;
+  const { selectedMgmt, locked: mgmtLocked } = resolveManagementFilter(prevMgmt, baseMgmtOptions, allOption);
+  const mgmtOptions = mgmtLocked ? [selectedMgmt] : baseMgmtOptions;
 
-  // ── Slot de filtro no header global (Gestão + esconder zeros) ──────────────
   const opexSlot = document.querySelector("#opex-gestao-slot");
   if (opexSlot) {
     opexSlot.hidden = false;
@@ -3066,56 +3063,53 @@ function renderOpexBudgetReport(detailPanel) {
     });
   }
 
-  // Renderiza a tabela + drilldown a partir das linhas (já restritas à gestão).
-  const renderBudgetOpexTable = (rows) => {
-    const tableMarkup = buildOpexRealTableMarkup(rows, null, opexHideZeros);
-    detailPanel.innerHTML = `<div class="opex-report-wrap reports-table-wrap"><div id="opex-budget-table-inner">${tableMarkup}</div></div>`;
-    const tableEl = detailPanel.querySelector(".reports-opex-table");
-    if (tableEl) initOpexDrilldown(tableEl, rows, null);
-    initAllReportTableResizers();
-  };
+  const ccCacheKey = `budget-cc-${year}`;
 
   if (selectedMgmt === allOption) {
-    // Admin: ano inteiro com CC (todas as gestões), filtrado client-side se preciso.
-    const ccCacheKey = `budget-cc-${year}`;
-    const ccCached = reportsLedgerCache.get(ccCacheKey);
-    if (!ccCached) {
-      detailPanel.innerHTML = `<div class="opex-report-wrap reports-table-wrap"><div id="opex-budget-table-inner">${vpSkeletonTable()}</div></div>`;
-      if (_opexBudgetCcLoadingYear !== year) {
-        _opexBudgetCcLoadingYear = year;
-        fetchBudgetLedgerWithCcForYear(year)
-          .then((rows) => reportsLedgerCache.set(ccCacheKey, { rows }))
-          .catch(() => reportsLedgerCache.set(ccCacheKey, { rows: [] }))
-          .finally(() => {
-            _opexBudgetCcLoadingYear = null;
-            if (selectedReportId === "opexBudget") renderReportsView();
-          });
-      }
-      return;
+    // Tabela a partir dos totais já carregados pelo ensureBudgetReportsDataForYear
+    const cacheEntry = reportsBudgetCache.get(year);
+    const rows = cacheEntry?.rows || [];
+    const tableMarkup = buildOpexRealTableMarkup(rows, null, opexHideZeros);
+    detailPanel.innerHTML = `<div class="opex-report-wrap reports-table-wrap"><div id="opex-budget-table-inner">${tableMarkup}</div></div>`;
+    // Drilldown: busca silenciosa com CC em background
+    const cachedCc = reportsLedgerCache.get(ccCacheKey);
+    if (cachedCc) {
+      const tableEl = detailPanel.querySelector(".reports-opex-table");
+      if (tableEl) initOpexDrilldown(tableEl, cachedCc.rows, null);
+    } else {
+      fetchBudgetLedgerWithCcForYear(year).then((rowsWithCc) => {
+        reportsLedgerCache.set(ccCacheKey, { rows: rowsWithCc });
+        if (selectedReportId === "opexBudget") {
+          const tableEl = detailPanel.querySelector(".reports-opex-table");
+          if (tableEl) initOpexDrilldown(tableEl, rowsWithCc, null);
+        }
+      }).catch(() => {});
     }
-    renderBudgetOpexTable(ccCached.rows || []);
   } else {
-    // Gestor/Analista (travado): busca SÓ os CCs da gestão no servidor (rápido).
     const mgmtCacheKey = `budget-mgmt-${year}-${selectedMgmt}`;
     const cached = reportsLedgerCache.get(mgmtCacheKey);
     if (cached) {
-      renderBudgetOpexTable(cached.rows || []);
+      const tableMarkup = buildOpexRealTableMarkup(cached.rows, null, opexHideZeros);
+      detailPanel.innerHTML = `<div class="opex-report-wrap reports-table-wrap"><div id="opex-budget-table-inner">${tableMarkup}</div></div>`;
+      const tableEl = detailPanel.querySelector(".reports-opex-table");
+      if (tableEl) initOpexDrilldown(tableEl, cached.rows, null);
     } else {
+      detailPanel.dataset.opexMgmt = selectedMgmt;
       detailPanel.innerHTML = `<div class="opex-report-wrap reports-table-wrap"><div id="opex-budget-table-inner">${vpSkeletonTable()}</div></div>`;
-      const effectiveCcIds = [...(validCcFilter?.ids || [])].filter(Boolean);
-      fetchBudgetLedgerForCcIds(year, effectiveCcIds)
-        .then((rows) => {
-          reportsLedgerCache.set(mgmtCacheKey, { rows });
-          if (selectedReportId === "opexBudget" && detailPanel.dataset.opexMgmt === selectedMgmt) renderReportsView();
-        })
-        .catch(() => {
-          if (selectedReportId === "opexBudget") {
-            const inner = detailPanel.querySelector("#opex-budget-table-inner");
-            if (inner) inner.innerHTML = `<div class="actuals-empty">Erro ao carregar dados de planejado.</div>`;
-          }
-        });
+      fetchBudgetLedgerForManagementYear(year, selectedMgmt).then((rows) => {
+        reportsLedgerCache.set(mgmtCacheKey, { rows });
+        if (selectedReportId === "opexBudget" && detailPanel.dataset.opexMgmt === selectedMgmt) renderReportsView();
+      }).catch(() => {
+        if (selectedReportId === "opexBudget" && detailPanel.dataset.opexMgmt === selectedMgmt) {
+          const inner = detailPanel.querySelector("#opex-budget-table-inner");
+          if (inner) inner.innerHTML = `<div class="actuals-empty">Erro ao carregar dados de planejado.</div>`;
+        }
+      });
+      return;
     }
   }
+
+  initAllReportTableResizers();
 }
 
 
@@ -4066,6 +4060,10 @@ function invalidateReportsForYear(year) {
 function invalidateBudgetReportsForYear(year) {
   const normalizedYear = Number(year || state.currentPeriod?.year || 2026);
   reportsBudgetCache.delete(normalizedYear);
+  reportsLedgerCache.delete(`budget-cc-${normalizedYear}`);
+  [...reportsLedgerCache.keys()]
+    .filter((key) => typeof key === "string" && key.startsWith(`budget-mgmt-${normalizedYear}-`))
+    .forEach((key) => reportsLedgerCache.delete(key));
   budgetReportsErrorMessage = "";
 }
 
