@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260623b">
+  <link rel="stylesheet" href="styles.css?v=20260623c">
 </head>
 <body class="auth-only">
   <svg aria-hidden="true" class="icon-sprite" width="0" height="0" focusable="false">
@@ -199,17 +199,17 @@
             <button id="params-toggle" class="menu-button menu-button-group" type="button" aria-expanded="false">
               <span class="menu-button-leading">
                 <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-params"></use></svg>
-                <span class="menu-item">Parâmetros</span>
+                <span class="menu-item">ParÃ¢metros</span>
               </span>
-              <span id="params-caret" class="menu-caret" style="display:none">−</span>
+              <span id="params-caret" class="menu-caret" style="display:none">âˆ’</span>
             </button>
             <div id="params-submenu" class="menu-submenu">
-              <button class="submenu-button" type="button" data-view="users"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-users"></use></svg><span>Usuários</span></button>
+              <button class="submenu-button" type="button" data-view="users"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-users"></use></svg><span>UsuÃ¡rios</span></button>
               <button class="submenu-button" type="button" data-view="accessProfiles"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-shield"></use></svg><span>Perfis de Acesso</span></button>
-              <!-- Demais parâmetros -->
+              <!-- Demais parÃ¢metros -->
               <button class="submenu-button" type="button" data-view="branchPlan"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-branch"></use></svg><span>Empresas</span></button>
               <button class="submenu-button" type="button" data-view="drePlan"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-accounts"></use></svg><span>Plano de Contas</span></button>
-              <button class="submenu-button" type="button" data-view="managements"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-managements"></use></svg><span>Gestões</span></button>
+              <button class="submenu-button" type="button" data-view="managements"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-managements"></use></svg><span>GestÃµes</span></button>
               <button class="submenu-button" type="button" data-view="ccPlan"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-cost"></use></svg><span>Centro de Custos</span></button>
               <button class="submenu-button" type="button" data-view="actualsLoad"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-upload"></use></svg><span>Carga de Realizado</span></button>
               <button class="submenu-button" type="button" data-view="budgetLoad"><svg class="submenu-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-upload"></use></svg><span>Carga de Planejado</span></button>
@@ -220,7 +220,7 @@
 
       <div class="sidebar-footer">
         <span id="sync-status" class="sync-status sync-status-sidebar">Banco de Dados Online</span>
-        <button id="logout-button" class="logout-button logout-button-round" type="button" aria-label="Sair">⏻</button>
+        <button id="logout-button" class="logout-button logout-button-round" type="button" aria-label="Sair">â»</button>
       </div>
     </aside>
 
@@ -237,7 +237,7 @@
           </button>
           <div class="header-search-wrap">
             <label class="header-search">
-              <span class="header-search-icon">⌕</span>
+              <span class="header-search-icon">âŒ•</span>
               <input type="text" placeholder="Buscar no sistema...">
               <span class="header-search-key">Ctrl K</span>
             </label>
@@ -245,7 +245,7 @@
           <div class="header-view-inline">
             <span id="view-kicker" class="header-view-kicker">DASHBOARD</span>
             <span class="header-view-separator">&ndash;</span>
-            <strong id="view-title" class="header-view-title">Visão geral</strong>
+            <strong id="view-title" class="header-view-title">VisÃ£o geral</strong>
           </div>
         </div>
         <div class="header-actions">
@@ -263,9 +263,9 @@
             </button>
             <div id="period-popover" class="period-popover" hidden>
               <div class="period-popover-header">
-                <button id="period-prev-year" class="period-nav-button" type="button" aria-label="Ano anterior">‹</button>
+                <button id="period-prev-year" class="period-nav-button" type="button" aria-label="Ano anterior">â€¹</button>
                 <strong id="period-year-label">2026</strong>
-                <button id="period-next-year" class="period-nav-button" type="button" aria-label="Proximo ano">›</button>
+                <button id="period-next-year" class="period-nav-button" type="button" aria-label="Proximo ano">â€º</button>
               </div>
               <p class="period-popover-caption">Selecione o ano base do relatorio e o mes em foco da analise.</p>
               <div id="period-month-grid" class="period-month-grid"></div>
@@ -281,32 +281,32 @@
       <section id="dashboard-view" class="content-view active">
         <div class="kpi-grid">
           <article class="kpi-card">
-            <span class="kpi-label">Receita Líquida</span>
-            <strong class="kpi-value"><span id="kpi-rl-currency" class="kpi-currency">R$</span><span id="kpi-rl-number" class="kpi-number">—</span></strong>
+            <span class="kpi-label">Receita LÃ­quida</span>
+            <strong class="kpi-value"><span id="kpi-rl-currency" class="kpi-currency">R$</span><span id="kpi-rl-number" class="kpi-number">â€”</span></strong>
             <span id="kpi-rl-trend" class="kpi-trend neutral">Carregando...</span>
             <div id="kpi-rl-spark" class="sparkline sparkline-blue"></div>
           </article>
           <article class="kpi-card">
             <span class="kpi-label">% Material</span>
-            <strong class="kpi-value"><span id="kpi-mat-number" class="kpi-number">—</span></strong>
+            <strong class="kpi-value"><span id="kpi-mat-number" class="kpi-number">â€”</span></strong>
             <span id="kpi-mat-trend" class="kpi-trend neutral">Carregando...</span>
             <div id="kpi-mat-spark" class="sparkline sparkline-cyan"></div>
           </article>
           <article class="kpi-card">
             <span class="kpi-label">EBITDA</span>
-            <strong class="kpi-value"><span id="kpi-ebitda-currency" class="kpi-currency">R$</span><span id="kpi-ebitda-number" class="kpi-number">—</span></strong>
+            <strong class="kpi-value"><span id="kpi-ebitda-currency" class="kpi-currency">R$</span><span id="kpi-ebitda-number" class="kpi-number">â€”</span></strong>
             <span id="kpi-ebitda-trend" class="kpi-trend neutral">Carregando...</span>
             <div id="kpi-ebitda-spark" class="sparkline sparkline-green"></div>
           </article>
           <article class="kpi-card">
             <span class="kpi-label">Margem EBITDA</span>
-            <strong class="kpi-value"><span id="kpi-mebitda-number" class="kpi-number">—</span></strong>
+            <strong class="kpi-value"><span id="kpi-mebitda-number" class="kpi-number">â€”</span></strong>
             <span id="kpi-mebitda-trend" class="kpi-trend neutral">Carregando...</span>
             <div id="kpi-mebitda-spark" class="sparkline sparkline-violet"></div>
           </article>
           <article class="kpi-card">
-            <span class="kpi-label">Lucro Líquido</span>
-            <strong class="kpi-value"><span id="kpi-ll-currency" class="kpi-currency">R$</span><span id="kpi-ll-number" class="kpi-number">—</span></strong>
+            <span class="kpi-label">Lucro LÃ­quido</span>
+            <strong class="kpi-value"><span id="kpi-ll-currency" class="kpi-currency">R$</span><span id="kpi-ll-number" class="kpi-number">â€”</span></strong>
             <span id="kpi-ll-trend" class="kpi-trend neutral">Carregando...</span>
             <div id="kpi-ll-spark" class="sparkline sparkline-amber"></div>
           </article>
@@ -317,7 +317,7 @@
             <div class="panel-header">
               <div>
                 <h3 id="dash-dre-title">Demonstrativo de Resultados</h3>
-                <p id="dash-dre-subtitle">Realizado vs Budget — mês em foco.</p>
+                <p id="dash-dre-subtitle">Realizado vs Budget â€” mÃªs em foco.</p>
               </div>
               <button id="dash-ver-dre" class="ghost-button" type="button">Ver DRE completa</button>
             </div>
@@ -328,7 +328,7 @@
           <div class="dash-charts-stack">
             <div class="content-card dashboard-panel dash-combo-card" id="dash-mat-card">
               <div class="panel-header">
-                <div><h3>Matéria-prima</h3></div>
+                <div><h3>MatÃ©ria-prima</h3></div>
               </div>
               <div id="dash-mat-chart" class="dash-chart-area dash-chart-area--combo"></div>
             </div>
@@ -342,7 +342,7 @@
           </div>
         </div>
 
-        <!-- Novos cards: Opex por Gestão + Headcount -->
+        <!-- Novos cards: Opex por GestÃ£o + Headcount -->
         <div class="dash-bottom-row">
 
           <!-- Card 1: Gastos Operacionais (donut) -->
@@ -366,7 +366,7 @@
               <div class="dash-hc-kpi-row">
                 <div class="dash-hc-kpi-block">
                   <div class="dash-hc-kpi-value-row">
-                    <span id="dash-hc-total" class="dash-hc-kpi-value">—</span>
+                    <span id="dash-hc-total" class="dash-hc-kpi-value">â€”</span>
                     <span id="dash-hc-colab-label" class="dash-hc-kpi-colab"></span>
                   </div>
                   <span id="dash-hc-cpp" class="dash-hc-kpi-cpp"></span>
@@ -386,7 +386,7 @@
         <div class="reports-layout">
           <div class="reports-catalog-card">
             <div class="reports-catalog-header">
-              <h2 class="reports-catalog-title">Central de Relatórios</h2>
+              <h2 class="reports-catalog-title">Central de RelatÃ³rios</h2>
               <button id="reports-reorder-btn" class="reports-reorder-btn" type="button" style="display:none" title="Reorganizar cards">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                 Reorganizar
@@ -399,7 +399,7 @@
                   <span class="rrc-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-cost"></use></svg></span>
                   <span class="rrc-fav" role="button" data-fav-id="dreSocReal" aria-label="Favoritar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
                 </div>
-                <strong class="rrc-label">DRE Societário Real</strong>
+                <strong class="rrc-label">DRE SocietÃ¡rio Real</strong>
                 <span class="rrc-subtitle"></span>
                 <span class="rrc-edit-btn" role="button" data-edit-card="dreSocReal" aria-label="Editar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
               </button>
@@ -429,7 +429,7 @@
                   <span class="rrc-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-cost"></use></svg></span>
                   <span class="rrc-fav" role="button" data-fav-id="dreSocBudget" aria-label="Favoritar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
                 </div>
-                <strong class="rrc-label">DRE Societário Budget</strong>
+                <strong class="rrc-label">DRE SocietÃ¡rio Budget</strong>
                 <span class="rrc-subtitle"></span>
                 <span class="rrc-edit-btn" role="button" data-edit-card="dreSocBudget" aria-label="Editar" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
               </button>
@@ -499,7 +499,7 @@
 
           <div class="content-card reports-table-card">
             <div id="reports-dre-table-wrap" class="reports-table-wrap">
-              <div class="actuals-empty">Preparando relatório...</div>
+              <div class="actuals-empty">Preparando relatÃ³rio...</div>
             </div>
           </div>
         </div>
@@ -617,8 +617,8 @@
         <div class="mgmt-view">
           <div class="content-card mgmt-card">
             <div class="mgmt-card-header">
-              <span class="mgmt-card-title">Gestões cadastradas</span>
-              <button class="primary-button" id="mgmt-add-btn" type="button">+ Nova gestão</button>
+              <span class="mgmt-card-title">GestÃµes cadastradas</span>
+              <button class="primary-button" id="mgmt-add-btn" type="button">+ Nova gestÃ£o</button>
             </div>
             <div id="mgmt-list" class="mgmt-list">
               <span class="mgmt-empty">Carregando...</span>
@@ -710,17 +710,17 @@
         <div class="users-shell">
           <div class="users-header">
             <div>
-              <h2 class="users-title">Usuários</h2>
-              <p class="users-subtitle">Gerencie os usuários com acesso ao VectonPlan.</p>
+              <h2 class="users-title">UsuÃ¡rios</h2>
+              <p class="users-subtitle">Gerencie os usuÃ¡rios com acesso ao VectonPlan.</p>
             </div>
-            <button id="users-invite-btn" class="primary-button" type="button">+ Convidar usuário</button>
+            <button id="users-invite-btn" class="primary-button" type="button">+ Convidar usuÃ¡rio</button>
           </div>
 
           <div class="content-card users-table-card">
             <table class="data-table users-table">
               <thead>
                 <tr>
-                  <th>Usuário</th>
+                  <th>UsuÃ¡rio</th>
                   <th>E-mail</th>
                   <th>Departamento</th>
                   <th>Perfil de Acesso</th>
@@ -733,22 +733,22 @@
                   <td>
                     <div class="users-name-cell">
                       <span class="users-avatar">RG</span>
-                      <span class="users-name-text">Ricardo Guimarães</span>
+                      <span class="users-name-text">Ricardo GuimarÃ£es</span>
                     </div>
                   </td>
                   <td><span class="users-email-text">ricardo@marcher.com.br</span></td>
-                  <td><span class="users-email-text">Controladoria e Finanças</span></td>
+                  <td><span class="users-email-text">Controladoria e FinanÃ§as</span></td>
                   <td><span class="users-badge">Super Admin</span></td>
-                  <td><span class="users-status-active">● Ativo</span></td>
+                  <td><span class="users-status-active">â— Ativo</span></td>
                   <td>
                     <div class="users-actions">
                       <button class="users-action-btn users-action-resend" type="button" title="Reenviar senha">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4v5h5"/><path d="M20 20v-5h-5"/><path d="M4.6 9A9 9 0 1 1 4 15"/></svg>
                       </button>
-                      <button class="users-action-btn" type="button" title="Editar usuário">
+                      <button class="users-action-btn" type="button" title="Editar usuÃ¡rio">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </button>
-                      <button class="users-action-btn users-action-delete" type="button" title="Excluir usuário">
+                      <button class="users-action-btn users-action-delete" type="button" title="Excluir usuÃ¡rio">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                       </button>
                     </div>
@@ -779,18 +779,18 @@
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                   Super Admin
                 </div>
-                <span class="ap-user-count" id="ap-count-superadmin">1 usuário</span>
+                <span class="ap-user-count" id="ap-count-superadmin">1 usuÃ¡rio</span>
               </div>
-              <p class="ap-description">Acesso irrestrito. Único perfil que pode promover ou rebaixar outros Super Admins. Reservado ao desenvolvedor/dono do sistema.</p>
+              <p class="ap-description">Acesso irrestrito. Ãšnico perfil que pode promover ou rebaixar outros Super Admins. Reservado ao desenvolvedor/dono do sistema.</p>
               <ul class="ap-perms">
                 <li class="ap-perm ap-perm--yes">Dashboard e cockpit consolidado</li>
-                <li class="ap-perm ap-perm--yes">Todos os relatórios e drill-down</li>
-                <li class="ap-perm ap-perm--yes">Parâmetros e carga de dados</li>
-                <li class="ap-perm ap-perm--yes">Gerenciar usuários e perfis</li>
+                <li class="ap-perm ap-perm--yes">Todos os relatÃ³rios e drill-down</li>
+                <li class="ap-perm ap-perm--yes">ParÃ¢metros e carga de dados</li>
+                <li class="ap-perm ap-perm--yes">Gerenciar usuÃ¡rios e perfis</li>
                 <li class="ap-perm ap-perm--yes">Promover / rebaixar Super Admin</li>
               </ul>
               <div class="ap-card-footer">
-                <button class="ap-users-btn" type="button" data-profile="super_admin">Ver usuários →</button>
+                <button class="ap-users-btn" type="button" data-profile="super_admin">Ver usuÃ¡rios â†’</button>
               </div>
             </div>
 
@@ -801,18 +801,18 @@
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z"/></svg>
                   Admin
                 </div>
-                <span class="ap-user-count" id="ap-count-admin">— usuários</span>
+                <span class="ap-user-count" id="ap-count-admin">â€” usuÃ¡rios</span>
               </div>
-              <p class="ap-description">Acesso total aos dados e configurações. Pode gerenciar usuários e promover Gestores e Analistas, mas não pode alterar Super Admins.</p>
+              <p class="ap-description">Acesso total aos dados e configuraÃ§Ãµes. Pode gerenciar usuÃ¡rios e promover Gestores e Analistas, mas nÃ£o pode alterar Super Admins.</p>
               <ul class="ap-perms">
                 <li class="ap-perm ap-perm--yes">Dashboard e cockpit consolidado</li>
-                <li class="ap-perm ap-perm--yes">Todos os relatórios e drill-down</li>
-                <li class="ap-perm ap-perm--yes">Parâmetros e carga de dados</li>
-                <li class="ap-perm ap-perm--yes">Gerenciar usuários e perfis</li>
+                <li class="ap-perm ap-perm--yes">Todos os relatÃ³rios e drill-down</li>
+                <li class="ap-perm ap-perm--yes">ParÃ¢metros e carga de dados</li>
+                <li class="ap-perm ap-perm--yes">Gerenciar usuÃ¡rios e perfis</li>
                 <li class="ap-perm ap-perm--no">Alterar Super Admins</li>
               </ul>
               <div class="ap-card-footer">
-                <button class="ap-users-btn" type="button" data-profile="admin">Ver usuários →</button>
+                <button class="ap-users-btn" type="button" data-profile="admin">Ver usuÃ¡rios â†’</button>
               </div>
             </div>
 
@@ -823,19 +823,19 @@
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3"/><path d="M4.5 18a4.5 4.5 0 0 1 9 0"/><circle cx="17" cy="8" r="2.5" opacity=".5"/><path d="M20 18a3.5 3.5 0 0 0-7 0" opacity=".5"/></svg>
                   Gestor
                 </div>
-                <span class="ap-user-count" id="ap-count-manager">— usuários</span>
+                <span class="ap-user-count" id="ap-count-manager">â€” usuÃ¡rios</span>
               </div>
-              <p class="ap-description">Visão consolidada no Dashboard e DRE (somente leitura). OPEX e Headcount restritos à sua gestão, com possibilidade de liberar gestões e CCs adicionais por perfil.</p>
+              <p class="ap-description">VisÃ£o consolidada no Dashboard e DRE (somente leitura). OPEX e Headcount restritos Ã  sua gestÃ£o, com possibilidade de liberar gestÃµes e CCs adicionais por perfil.</p>
               <ul class="ap-perms">
                 <li class="ap-perm ap-perm--yes">Dashboard e cockpit consolidado</li>
                 <li class="ap-perm ap-perm--yes">DRE consolidado (somente leitura)</li>
-                <li class="ap-perm ap-perm--partial">OPEX e Headcount — restrito à gestão própria</li>
-                <li class="ap-perm ap-perm--partial">Gestões e CCs adicionais configuráveis</li>
-                <li class="ap-perm ap-perm--partial">Contas matriciais configuráveis</li>
-                <li class="ap-perm ap-perm--no">Parâmetros, carga ou usuários</li>
+                <li class="ap-perm ap-perm--partial">OPEX e Headcount â€” restrito Ã  gestÃ£o prÃ³pria</li>
+                <li class="ap-perm ap-perm--partial">GestÃµes e CCs adicionais configurÃ¡veis</li>
+                <li class="ap-perm ap-perm--partial">Contas matriciais configurÃ¡veis</li>
+                <li class="ap-perm ap-perm--no">ParÃ¢metros, carga ou usuÃ¡rios</li>
               </ul>
               <div class="ap-card-footer">
-                <button class="ap-users-btn" type="button" data-profile="manager">Ver usuários →</button>
+                <button class="ap-users-btn" type="button" data-profile="manager">Ver usuÃ¡rios â†’</button>
               </div>
             </div>
 
@@ -846,19 +846,19 @@
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
                   Analista
                 </div>
-                <span class="ap-user-count" id="ap-count-analyst">— usuários</span>
+                <span class="ap-user-count" id="ap-count-analyst">â€” usuÃ¡rios</span>
               </div>
-              <p class="ap-description">Sem acesso ao Dashboard e DRE consolidados. OPEX e Headcount restritos à sua gestão, com possibilidade de liberar gestões e CCs adicionais por perfil.</p>
+              <p class="ap-description">Sem acesso ao Dashboard e DRE consolidados. OPEX e Headcount restritos Ã  sua gestÃ£o, com possibilidade de liberar gestÃµes e CCs adicionais por perfil.</p>
               <ul class="ap-perms">
                 <li class="ap-perm ap-perm--no">Dashboard e cockpit consolidado</li>
                 <li class="ap-perm ap-perm--no">DRE consolidado da empresa</li>
-                <li class="ap-perm ap-perm--partial">OPEX e Headcount — restrito à gestão própria</li>
-                <li class="ap-perm ap-perm--partial">Gestões e CCs adicionais configuráveis</li>
-                <li class="ap-perm ap-perm--partial">Contas matriciais configuráveis</li>
-                <li class="ap-perm ap-perm--no">Parâmetros, carga ou usuários</li>
+                <li class="ap-perm ap-perm--partial">OPEX e Headcount â€” restrito Ã  gestÃ£o prÃ³pria</li>
+                <li class="ap-perm ap-perm--partial">GestÃµes e CCs adicionais configurÃ¡veis</li>
+                <li class="ap-perm ap-perm--partial">Contas matriciais configurÃ¡veis</li>
+                <li class="ap-perm ap-perm--no">ParÃ¢metros, carga ou usuÃ¡rios</li>
               </ul>
               <div class="ap-card-footer">
-                <button class="ap-users-btn" type="button" data-profile="analyst">Ver usuários →</button>
+                <button class="ap-users-btn" type="button" data-profile="analyst">Ver usuÃ¡rios â†’</button>
               </div>
             </div>
 
@@ -867,7 +867,7 @@
           <!-- Legenda -->
           <div class="ap-legend">
             <span class="ap-perm ap-perm--yes ap-legend-item">Acesso total</span>
-            <span class="ap-perm ap-perm--partial ap-legend-item">Acesso parcial / configurável</span>
+            <span class="ap-perm ap-perm--partial ap-legend-item">Acesso parcial / configurÃ¡vel</span>
             <span class="ap-perm ap-perm--no ap-legend-item">Sem acesso</span>
           </div>
 
@@ -877,7 +877,7 @@
     </main>
   </div>
 
-  <!-- ── POPOVER PERFIL ──────────────────────────────────────────────── -->
+  <!-- â”€â”€ POPOVER PERFIL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
   <dialog id="profile-dialog" class="profile-dialog" aria-labelledby="profile-dialog-title">
     <div class="profile-dialog-inner">
 
@@ -891,7 +891,7 @@
         </button>
       </header>
 
-      <!-- Prévia do perfil -->
+      <!-- PrÃ©via do perfil -->
       <div class="profile-dialog-preview">
         <button id="profile-photo-trigger" class="profile-photo-preview" type="button">RG</button>
         <div class="profile-preview-copy">
@@ -906,14 +906,14 @@
 
         <div class="profile-dialog-fields">
           <label class="profile-field-full">
-            <span class="field-label">Nome de exibição</span>
+            <span class="field-label">Nome de exibiÃ§Ã£o</span>
             <input id="profile-name" name="name" type="text" required placeholder="Seu nome completo">
           </label>
 
           <label class="profile-field-full profile-field-readonly">
             <span class="field-label">
               E-mail
-              <span class="field-badge">Imutável</span>
+              <span class="field-badge">ImutÃ¡vel</span>
             </span>
             <input id="profile-email" name="email" type="email" required readonly tabindex="-1">
           </label>
@@ -937,11 +937,11 @@
           </label>
         </div>
 
-        <!-- Acessos Disponíveis -->
+        <!-- Acessos DisponÃ­veis -->
         <div class="profile-dialog-access-section">
           <div class="profile-access-header">
-            <strong>Acessos disponíveis</strong>
-            <span>Somente leitura — gerenciado pelo administrador.</span>
+            <strong>Acessos disponÃ­veis</strong>
+            <span>Somente leitura â€” gerenciado pelo administrador.</span>
           </div>
           <div class="profile-access-trees" id="profile-access-trees">
             <!-- renderizado por renderAccessTrees() -->
@@ -956,41 +956,42 @@
 
     </div>
   </dialog>
-  <!-- ── FIM POPOVER PERFIL ──────────────────────────────────────────── -->
+  <!-- â”€â”€ FIM POPOVER PERFIL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 
-  <!-- v=YYYYMMDD — atualize esta data a cada deploy para invalidar o cache do browser -->
-  <script src="seed-data.js?v=20260623b"></script>
-  <script src="dre-structure.js?v=20260623b"></script>
-  <script src="cc-structure.js?v=20260623b"></script>
-  <script src="supabase-config.js?v=20260623b"></script>
+  <!-- v=YYYYMMDD â€” atualize esta data a cada deploy para invalidar o cache do browser -->
+  <script src="seed-data.js?v=20260623c"></script>
+  <script src="dre-structure.js?v=20260623c"></script>
+  <script src="cc-structure.js?v=20260623c"></script>
+  <script src="supabase-config.js?v=20260623c"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="src/core/constants.js?v=20260623b"></script>
-  <script src="src/core/utils.js?v=20260623b"></script>
-  <script src="src/core/storage.js?v=20260623b"></script>
-  <script src="src/modules/auth/authSession.js?v=20260623b"></script>
-  <script src="src/modules/actuals/actualsModule.js?v=20260623b"></script>
-  <script src="src/modules/budget/budgetModule.js?v=20260623b"></script>
-  <script src="src/modules/navigation/navigationModule.js?v=20260623b"></script>
-  <script src="src/modules/ui/headerModule.js?v=20260623b"></script>
-  <script src="src/modules/ui/branchTreeModule.js?v=20260623b"></script>
-  <script src="src/modules/ui/dreTreeModule.js?v=20260623b"></script>
-  <script src="src/modules/ui/ccTreeModule.js?v=20260623b"></script>
-  <script src="src/modules/ui/renderModule.js?v=20260623b"></script>
-  <script src="src/modules/ui/profileDialogModule.js?v=20260623b"></script>
-  <script src="src/modules/reports/reportsDreModule.js?v=20260623b"></script>
-  <script src="src/modules/reports/reportsOpexModule.js?v=20260623b"></script>
-  <script src="src/modules/reports/reportsHeadcountModule.js?v=20260623b"></script>
-  <script src="src/modules/headcount/headcountRenderModule.js?v=20260623b"></script>
-  <script src="src/modules/ui/shellEventsModule.js?v=20260623b"></script>
-  <script src="src/modules/ui/editorEventsModule.js?v=20260623b"></script>
-  <script src="src/modules/ui/dialogs.js?v=20260623b"></script>
-  <script src="src/modules/reports/reportsHelpersModule.js?v=20260623b"></script>
-  <script src="src/modules/users/usersModule.js?v=20260623b"></script>
-  <script src="src/modules/params/managementsModule.js?v=20260623b"></script>
-  <script src="src/modules/dashboard/dashboardCards.js?v=20260623b"></script>
-  <script src="src/modules/dashboard/dashboardModule.js?v=20260623b"></script>
-  <script src="src/modules/dashboard/dashboardVisuals.js?v=20260623b"></script>
-  <script src="src/modules/dashboard/marketTicker.js?v=20260623b"></script>
-  <script src="app.js?v=20260623b"></script>
+  <script src="src/core/constants.js?v=20260623c"></script>
+  <script src="src/core/utils.js?v=20260623c"></script>
+  <script src="src/core/storage.js?v=20260623c"></script>
+  <script src="src/modules/auth/authSession.js?v=20260623c"></script>
+  <script src="src/modules/actuals/actualsModule.js?v=20260623c"></script>
+  <script src="src/modules/budget/budgetModule.js?v=20260623c"></script>
+  <script src="src/modules/navigation/navigationModule.js?v=20260623c"></script>
+  <script src="src/modules/ui/headerModule.js?v=20260623c"></script>
+  <script src="src/modules/ui/branchTreeModule.js?v=20260623c"></script>
+  <script src="src/modules/ui/dreTreeModule.js?v=20260623c"></script>
+  <script src="src/modules/ui/ccTreeModule.js?v=20260623c"></script>
+  <script src="src/modules/ui/renderModule.js?v=20260623c"></script>
+  <script src="src/modules/ui/profileDialogModule.js?v=20260623c"></script>
+  <script src="src/modules/reports/reportsDreModule.js?v=20260623c"></script>
+  <script src="src/modules/reports/reportsOpexModule.js?v=20260623c"></script>
+  <script src="src/modules/reports/reportsHeadcountModule.js?v=20260623c"></script>
+  <script src="src/modules/headcount/headcountRenderModule.js?v=20260623c"></script>
+  <script src="src/modules/ui/shellEventsModule.js?v=20260623c"></script>
+  <script src="src/modules/ui/editorEventsModule.js?v=20260623c"></script>
+  <script src="src/modules/ui/dialogs.js?v=20260623c"></script>
+  <script src="src/modules/reports/reportsHelpersModule.js?v=20260623c"></script>
+  <script src="src/modules/users/usersModule.js?v=20260623c"></script>
+  <script src="src/modules/params/managementsModule.js?v=20260623c"></script>
+  <script src="src/modules/dashboard/dashboardCards.js?v=20260623c"></script>
+  <script src="src/modules/dashboard/dashboardModule.js?v=20260623c"></script>
+  <script src="src/modules/dashboard/dashboardVisuals.js?v=20260623c"></script>
+  <script src="src/modules/dashboard/marketTicker.js?v=20260623c"></script>
+  <script src="app.js?v=20260623c"></script>
 </body>
 </html>
+

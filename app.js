@@ -747,9 +747,11 @@ const reportsOpexModule = createReportsOpexModule({
   initFloatingScrollbar,
   fetchActualsLedgerWithCcForYear,
   fetchActualsLedgerForManagementYear,
+  fetchActualsLedgerForCcIds,
   renderReportsView,
   renderOpexBudgetReport,
-  resolveManagementFilter
+  resolveManagementFilter,
+  getPartialManagements
 });
 const { createReportsHeadcountModule } = window.VECTON_REPORTS_HEADCOUNT;
 const reportsHeadcountModule = createReportsHeadcountModule({
@@ -790,6 +792,7 @@ const { renderDashOpexCards } = createDashboardCardsModule({
   fetchActualsLedgerWithCcForYear,
   fetchActualsLedgerForCcIds,
   getAllowedManagements,
+  getPartialManagements,
   buildOpexCostCenterFilter,
   matchesOpexCostCenterFilter,
   renderNavigation,
@@ -1402,6 +1405,24 @@ function getAllowedManagements() {
   return [getUserManagement(), ...getExtraManagements()].filter(Boolean);
 }
 
+// Gestões onde o acesso é parcial: usuário tem extra_cc_ids de CCs daquela gestão,
+// mas NÃO tem acesso à gestão inteira. Retorna Map<mgmtName, ccId[]>.
+function getPartialManagements() {
+  if (!isAccessRestricted()) return new Map();
+  const extraIds = new Set((getExtraCcIds() || []).map(String));
+  if (!extraIds.size) return new Map();
+  const fullMgmts = new Set(getAllowedManagements() || []);
+  const partialMap = new Map();
+  (state.costCenters || []).forEach((cc) => {
+    if (!extraIds.has(String(cc.id))) return;
+    const mgmt = (cc.management || "").trim();
+    if (!mgmt || fullMgmts.has(mgmt)) return;
+    if (!partialMap.has(mgmt)) partialMap.set(mgmt, []);
+    partialMap.get(mgmt).push(String(cc.id));
+  });
+  return partialMap;
+}
+
 // Relatórios "consolidados" da empresa (DREs). Analista NÃO vê; Gestor vê.
 // Demais (OPEX, Headcount) são por área/CC e ficam limitados pela gestão no drill-down.
 function isConsolidatedReport(reportId) {
@@ -1446,33 +1467,38 @@ function getAllowedCcNumbers() {
   return allowed;
 }
 
-// Retorna { selectedMgmt, locked, allowedMgmts } para uso nos filtros de gestão.
-// allowedMgmts: array de gestões visíveis no dropdown quando o usuário tem extras;
-// null significa sem restrição (admin) ou restrição total via locked.
+// Retorna { selectedMgmt, locked, allowedMgmts, partialMgmts } para uso nos filtros de gestão.
+// allowedMgmts: array de gestões visíveis no dropdown; null = sem restrição (admin) ou locked total.
+// partialMgmts: Map<mgmt, ccId[]> com gestões de acesso parcial via extra_cc_ids.
 function resolveManagementFilter(prevMgmt, mgmtOptions, allOption) {
   const userMgmt = getUserManagement();
   if (isManager() || isAnalyst()) {
     const extraMgmts = getExtraManagements();
-    if (extraMgmts.length > 0 && userMgmt) {
-      // Gestor com gestões extras: pode alternar entre as suas gestões no dropdown.
-      const allowedMgmts = [userMgmt, ...extraMgmts];
-      const selected = allowedMgmts.includes(prevMgmt) ? prevMgmt : userMgmt;
-      return { selectedMgmt: selected, locked: false, allowedMgmts };
+    const partialMgmts = getPartialManagements();
+    const fullMgmts = [userMgmt, ...extraMgmts].filter(Boolean);
+    const allAccessible = [...fullMgmts, ...partialMgmts.keys()];
+    if (allAccessible.length > 0 && (extraMgmts.length > 0 || partialMgmts.size > 0)) {
+      // Múltiplas gestões (plenas ou parciais): dropdown com todas.
+      const defaultMgmt = fullMgmts[0] || [...partialMgmts.keys()][0];
+      const selected = allAccessible.includes(prevMgmt) ? prevMgmt : defaultMgmt;
+      const locked = allAccessible.length === 1;
+      return { selectedMgmt: selected, locked, allowedMgmts: allAccessible, partialMgmts };
     }
     // Fail-closed: travado na própria gestão. Sentinela "__no_cc__" garante
     // que um perfil sem gestão não case com nenhum CC.
-    return { selectedMgmt: userMgmt || "__no_cc__", locked: true, allowedMgmts: null };
+    return { selectedMgmt: userMgmt || "__no_cc__", locked: true, allowedMgmts: null, partialMgmts };
   }
   const selectedMgmt = mgmtOptions.includes(prevMgmt) ? prevMgmt : allOption;
-  return { selectedMgmt, locked: false, allowedMgmts: null };
+  return { selectedMgmt, locked: false, allowedMgmts: null, partialMgmts: new Map() };
 }
 
-// Gera as <option> do select de gestão, aplicando disabled quando locked
-function buildMgmtSelectOptions(mgmtOptions, selectedMgmt, locked) {
+// Gera as <option> do select de gestão; partialMgmts opcional para marcar "· parcial"
+function buildMgmtSelectOptions(mgmtOptions, selectedMgmt, locked, partialMgmts) {
   return mgmtOptions.map((m) => {
     const sel = m === selectedMgmt ? "selected" : "";
     const dis = locked && m !== selectedMgmt ? "disabled" : "";
-    return `<option value="${escapeHtml(m)}" ${sel} ${dis}>${escapeHtml(m)}</option>`;
+    const label = partialMgmts?.has(m) ? `${m} · parcial` : m;
+    return `<option value="${escapeHtml(m)}" ${sel} ${dis}>${escapeHtml(label)}</option>`;
   }).join("");
 }
 
@@ -2057,7 +2083,7 @@ const REPORT_TITLES = {
     const allOption = "Marcher";
     const baseMgmtOptions = [allOption, ...managements];
     const prevMgmt = detailPanel.dataset.opexMgmt || allOption;
-    const { selectedMgmt, locked: mgmtLocked, allowedMgmts } = resolveManagementFilter(prevMgmt, baseMgmtOptions, allOption);
+    const { selectedMgmt, locked: mgmtLocked, allowedMgmts, partialMgmts } = resolveManagementFilter(prevMgmt, baseMgmtOptions, allOption);
     const mgmtOptions = mgmtLocked ? [selectedMgmt] : (allowedMgmts || baseMgmtOptions);
 
     const validCcFilter = buildEffectiveOpexFilter(selectedMgmt);
@@ -2065,7 +2091,7 @@ const REPORT_TITLES = {
     const header = `
       <div class="opex-filter-bar">
         <select class="opex-filter-select" id="opex-mgmt-select" ${mgmtLocked ? "disabled" : ""}>
-          ${buildMgmtSelectOptions(mgmtOptions, selectedMgmt, mgmtLocked)}
+          ${buildMgmtSelectOptions(mgmtOptions, selectedMgmt, mgmtLocked, partialMgmts)}
         </select>
       </div>
     `;
@@ -2077,7 +2103,7 @@ const REPORT_TITLES = {
       opexSlot.innerHTML = `
         <div class="opex-header-filter" style="display:flex;align-items:center;gap:10px">
           <select class="opex-filter-select" id="opex-mgmt-select-header" ${mgmtLocked ? "disabled" : ""}>
-            ${buildMgmtSelectOptions(mgmtOptions, selectedMgmt, mgmtLocked)}
+            ${buildMgmtSelectOptions(mgmtOptions, selectedMgmt, mgmtLocked, partialMgmts)}
           </select>
           <button id="opex-hide-zeros-btn" type="button" style="
             height:32px;padding:0 12px;border-radius:8px;font-size:0.74rem;font-weight:500;
@@ -3037,7 +3063,7 @@ function renderOpexBudgetReport(detailPanel) {
   // "Marcher" (consolidado) só para admin/super_admin ou perfis sem restrição.
   // Gestor/Analista com gestões extras vê só as gestões permitidas — sem "Marcher",
   // pois o OPEX não exibe dados consolidados para perfis restritos.
-  const { selectedMgmt, locked: mgmtLocked, allowedMgmts } = resolveManagementFilter(prevMgmt, baseMgmtOptions, allOption);
+  const { selectedMgmt, locked: mgmtLocked, allowedMgmts, partialMgmts } = resolveManagementFilter(prevMgmt, baseMgmtOptions, allOption);
   const mgmtOptions = mgmtLocked ? [selectedMgmt] : (allowedMgmts ? [...allowedMgmts] : baseMgmtOptions);
 
   const opexSlot = document.querySelector("#opex-gestao-slot");
@@ -3046,7 +3072,7 @@ function renderOpexBudgetReport(detailPanel) {
     opexSlot.innerHTML = `
       <div class="opex-header-filter" style="display:flex;align-items:center;gap:10px">
         <select class="opex-filter-select" id="opex-budget-mgmt-select-header" ${mgmtLocked ? "disabled" : ""}>
-          ${buildMgmtSelectOptions(mgmtOptions, selectedMgmt, mgmtLocked)}
+          ${buildMgmtSelectOptions(mgmtOptions, selectedMgmt, mgmtLocked, partialMgmts)}
         </select>
         <button id="opex-budget-hide-zeros-btn" type="button" style="
           height:32px;padding:0 12px;border-radius:8px;font-size:0.74rem;font-weight:500;
@@ -3089,7 +3115,11 @@ function renderOpexBudgetReport(detailPanel) {
       }).catch(() => {});
     }
   } else {
-    const mgmtCacheKey = `budget-mgmt-${year}-${selectedMgmt}`;
+    const isPartial = partialMgmts?.has(selectedMgmt);
+    const partialCcIds = isPartial ? partialMgmts.get(selectedMgmt) : null;
+    const mgmtCacheKey = isPartial
+      ? `budget-partial-${year}-${[...partialCcIds].sort().join(",")}`
+      : `budget-mgmt-${year}-${selectedMgmt}`;
     const cached = reportsLedgerCache.get(mgmtCacheKey);
     if (cached) {
       const tableMarkup = buildOpexRealTableMarkup(cached.rows, null, opexHideZeros);
@@ -3099,7 +3129,10 @@ function renderOpexBudgetReport(detailPanel) {
     } else {
       detailPanel.dataset.opexMgmt = selectedMgmt;
       detailPanel.innerHTML = `<div class="opex-report-wrap reports-table-wrap"><div id="opex-budget-table-inner">${vpSkeletonTable()}</div></div>`;
-      fetchBudgetLedgerForManagementYear(year, selectedMgmt).then((rows) => {
+      const fetchPromise = isPartial
+        ? fetchBudgetLedgerForCcIds(year, partialCcIds)
+        : fetchBudgetLedgerForManagementYear(year, selectedMgmt);
+      fetchPromise.then((rows) => {
         reportsLedgerCache.set(mgmtCacheKey, { rows });
         if (selectedReportId === "opexBudget" && detailPanel.dataset.opexMgmt === selectedMgmt) renderReportsView();
       }).catch(() => {
@@ -3262,6 +3295,19 @@ function buildEffectiveOpexFilter(selectedMgmt) {
   (state.costCenters || []).forEach((cc) => {
     if (extraIds.some(id => String(id) === String(cc.id))) {
       if (cc.id) ids.add(String(cc.id).trim());
+      const n = normalizeCode(cc.number);
+      if (n) numbers.add(n);
+    }
+  });
+  return { ids, numbers };
+}
+
+// Filtro OPEX por lista explícita de IDs de CC (para acesso parcial).
+function buildOpexCcIdsFilter(ccIds) {
+  const ids = new Set(ccIds.map(String));
+  const numbers = new Set();
+  (state.costCenters || []).forEach((cc) => {
+    if (ids.has(String(cc.id))) {
       const n = normalizeCode(cc.number);
       if (n) numbers.add(n);
     }
