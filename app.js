@@ -793,7 +793,6 @@ const { renderDashOpexCards } = createDashboardCardsModule({
   fetchActualsLedgerForCcIds,
   getAllowedManagements,
   getPartialManagements,
-  getExtraCcIds,
   buildOpexCostCenterFilter,
   matchesOpexCostCenterFilter,
   renderNavigation,
