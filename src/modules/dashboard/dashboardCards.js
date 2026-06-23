@@ -14,6 +14,7 @@
       resolveOrganizationId,
       fetchSupabaseRowsSafe,
       fetchActualsLedgerWithCcForYear,
+      fetchActualsLedgerForCcIds,
       buildOpexCostCenterFilter,
       matchesOpexCostCenterFilter,
       renderNavigation,
@@ -342,40 +343,32 @@
       }
 
       const month = monthIdx + 1;
-      const ccCacheKey = `opex-cc-${year}`;
-      const ccCached = reportsLedgerCache.get(ccCacheKey);
 
       let pessoalSource = allRealRows;
       if (dashHcMgmt !== "Marcher") {
-        if (ccCached) {
-          pessoalSource = ccCached.rows;
-        } else {
-          if (!reportsLedgerCache.has(ccCacheKey) && opexCcLoadingYear !== year) {
-            opexCcLoadingYear = year;
-            fetchActualsLedgerWithCcForYear(year).then((fetched) => {
-              reportsLedgerCache.set(ccCacheKey, { rows: fetched });
-              opexCcLoadingYear = null;
+        const mgmtCcFilter = buildOpexCostCenterFilter(dashHcMgmt);
+        const ccIds = [...(mgmtCcFilter?.ids || [])];
+        const hcMgmtCacheKey = `dash-hc-cc-${year}-${dashHcMgmt}`;
+        const hcMgmtCached = reportsLedgerCache.get(hcMgmtCacheKey);
+        if (hcMgmtCached) {
+          pessoalSource = hcMgmtCached.rows;
+        } else if (!reportsLedgerCache.has(hcMgmtCacheKey) && hcDashLoadingKey !== hcMgmtCacheKey) {
+          hcDashLoadingKey = hcMgmtCacheKey;
+          (ccIds.length ? fetchActualsLedgerForCcIds(year, ccIds) : fetchActualsLedgerWithCcForYear(year))
+            .then((fetched) => {
+              reportsLedgerCache.set(hcMgmtCacheKey, { rows: fetched });
+              hcDashLoadingKey = null;
               const freshReal = reportsLedgerCache.get(year)?.rows || [];
               renderDashHcCard(year, monthIdx, freshReal, pessoalAccounts, mgmtOptions);
-            }).catch(() => {
-              opexCcLoadingYear = null;
-            });
-          }
+            })
+            .catch(() => { hcDashLoadingKey = null; });
+          pessoalSource = [];
+        } else {
           pessoalSource = [];
         }
       }
 
-      let filteredPessoal = pessoalSource;
-      if (dashHcMgmt !== "Marcher") {
-        const filter = buildOpexCostCenterFilter(dashHcMgmt);
-        filteredPessoal = pessoalSource.filter((row) =>
-          matchesOpexCostCenterFilter(
-            filter,
-            String(row.cost_center_id ?? row.costCenterId ?? ""),
-            String(row.cost_center_number ?? row.costCenterNumber ?? "")
-          )
-        );
-      }
+      const filteredPessoal = pessoalSource;
 
       const pessoalMonths = Array(12).fill(0);
       for (const row of filteredPessoal) {
