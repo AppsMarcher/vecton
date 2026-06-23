@@ -17,9 +17,11 @@
       initFloatingScrollbar,
       fetchActualsLedgerWithCcForYear,
       fetchActualsLedgerForManagementYear,
+      fetchActualsLedgerForCcIds,
       renderReportsView,
       renderOpexBudgetReport,
-      resolveManagementFilter
+      resolveManagementFilter,
+      getPartialManagements
     } = deps;
 
     function renderSelectedOpexReport(detailPanel, selectedReportId) {
@@ -48,7 +50,7 @@
       // "Marcher" (consolidado) só para admin/super_admin ou perfis sem restrição.
       // Gestor/Analista com gestões extras vê só as gestões permitidas — sem "Marcher",
       // pois o OPEX não exibe dados consolidados para perfis restritos.
-      const { selectedMgmt, locked: mgmtLocked, allowedMgmts } = resolveManagementFilter(prevMgmt, baseMgmtOptions, allOption);
+      const { selectedMgmt, locked: mgmtLocked, allowedMgmts, partialMgmts } = resolveManagementFilter(prevMgmt, baseMgmtOptions, allOption);
       const mgmtOptions = mgmtLocked ? [selectedMgmt] : (allowedMgmts ? [...allowedMgmts] : baseMgmtOptions);
       const validCcFilter = buildOpexCostCenterFilter(selectedMgmt);
 
@@ -82,7 +84,8 @@
         allOption,
         selectedMgmt,
         mgmtOptions,
-        locked: mgmtLocked
+        locked: mgmtLocked,
+        partialMgmts
       });
 
       const ccCacheKey = `opex-cc-${year}`;
@@ -105,7 +108,11 @@
           }).catch(() => {});
         }
       } else {
-        const mgmtCacheKey = `opex-mgmt-${year}-${selectedMgmt}`;
+        const isPartial = partialMgmts?.has(selectedMgmt);
+        const partialCcIds = isPartial ? partialMgmts.get(selectedMgmt) : null;
+        const mgmtCacheKey = isPartial
+          ? `opex-partial-${year}-${[...partialCcIds].sort().join(",")}`
+          : `opex-mgmt-${year}-${selectedMgmt}`;
         const cached = reportsLedgerCache.get(mgmtCacheKey);
         if (cached) {
           const tableMarkup = buildOpexRealTableMarkup(cached.rows, null, getOpexHideZeros());
@@ -115,7 +122,10 @@
         } else {
           detailPanel.dataset.opexMgmt = selectedMgmt;
           detailPanel.innerHTML = `<div class="opex-report-wrap reports-table-wrap"><div id="opex-table-inner">${window.vpSkeletonTable()}</div></div>`;
-          fetchActualsLedgerForManagementYear(year, selectedMgmt).then((rows) => {
+          const fetchPromise = isPartial
+            ? fetchActualsLedgerForCcIds(year, partialCcIds)
+            : fetchActualsLedgerForManagementYear(year, selectedMgmt);
+          fetchPromise.then((rows) => {
             reportsLedgerCache.set(mgmtCacheKey, { rows });
             if (getSelectedReportId() === "opexReal" && detailPanel.dataset.opexMgmt === selectedMgmt) {
               renderReportsView();
@@ -132,7 +142,7 @@
       initAllReportTableResizers();
     }
 
-    function renderHeaderSlot({ detailPanel, year, allOption, selectedMgmt, mgmtOptions, locked = false }) {
+    function renderHeaderSlot({ detailPanel, year, allOption, selectedMgmt, mgmtOptions, locked = false, partialMgmts }) {
       const opexSlot = document.querySelector("#opex-gestao-slot");
       if (!opexSlot) return;
 
@@ -140,7 +150,10 @@
       opexSlot.innerHTML = `
         <div class="opex-header-filter" style="display:flex;align-items:center;gap:10px">
           <select class="opex-filter-select" id="opex-mgmt-select-header" ${locked ? "disabled" : ""}>
-            ${mgmtOptions.map((management) => `<option value="${escapeHtml(management)}" ${management === selectedMgmt ? "selected" : ""} ${locked && management !== selectedMgmt ? "disabled" : ""}>${escapeHtml(management)}</option>`).join("")}
+            ${mgmtOptions.map((management) => {
+              const label = partialMgmts?.has(management) ? `${management} · parcial` : management;
+              return `<option value="${escapeHtml(management)}" ${management === selectedMgmt ? "selected" : ""} ${locked && management !== selectedMgmt ? "disabled" : ""}>${escapeHtml(label)}</option>`;
+            }).join("")}
           </select>
           <button id="opex-hide-zeros-btn" type="button" style="
             height:32px;padding:0 12px;border-radius:8px;font-size:0.74rem;font-weight:500;
