@@ -376,6 +376,7 @@
         }
       }
 
+      const isLoadingHc = dashHcMgmt !== "Marcher" && pessoalSource.length === 0 && hcDashLoadingKey !== null;
       const filteredPessoal = pessoalSource;
 
       const pessoalMonths = Array(12).fill(0);
@@ -390,7 +391,7 @@
       }
 
       renderDashHcKpi(year, month, pessoalMonths, monthIdx);
-      renderDashHcLineChart("dash-hc-line-chart", pessoalMonths, monthIdx, allRealRows.length > 0 || pessoalSource.length > 0);
+      renderDashHcLineChart("dash-hc-line-chart", pessoalMonths, monthIdx, allRealRows.length > 0 || pessoalSource.length > 0, isLoadingHc);
     }
 
     function renderDashHcKpi(year, month, pessoalMonths, monthIdx) {
@@ -471,7 +472,7 @@
       }
     }
 
-    function renderDashHcLineChart(containerId, pessoalMonths, focusMonthIdx, hasData) {
+    function renderDashHcLineChart(containerId, pessoalMonths, focusMonthIdx, hasData, isLoading = false) {
       const el = document.querySelector(`#${containerId}`);
       if (!el) return;
 
@@ -484,9 +485,34 @@
       const chartW = W - PAD_L - PAD_R;
       const chartH = H - PAD_B - PAD_T;
 
+      if (isLoading) {
+        const skPts = [0,18,32,22,38,28,20,12,24,30,22,16].map((v, i) => ({
+          x: PAD_L + i * (chartW / 11) + chartW / 22,
+          y: PAD_T + chartH - (v / 40) * chartH
+        }));
+        let skPath = `M ${skPts[0].x.toFixed(1)} ${skPts[0].y.toFixed(1)}`;
+        for (let i = 1; i < skPts.length; i++) {
+          const prev = skPts[i - 1], curr = skPts[i];
+          const cpX = ((prev.x + curr.x) / 2).toFixed(1);
+          skPath += ` C ${cpX} ${prev.y.toFixed(1)}, ${cpX} ${curr.y.toFixed(1)}, ${curr.x.toFixed(1)} ${curr.y.toFixed(1)}`;
+        }
+        el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:100%">
+          <defs>
+            <linearGradient id="hc-sk-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="var(--text-faint)" stop-opacity="0.15"/>
+              <stop offset="50%" stop-color="var(--text-faint)" stop-opacity="0.45"/>
+              <stop offset="100%" stop-color="var(--text-faint)" stop-opacity="0.15"/>
+              <animateTransform attributeName="gradientTransform" type="translate" from="-1 0" to="1 0" dur="1.4s" repeatCount="indefinite"/>
+            </linearGradient>
+          </defs>
+          <path d="${skPath}" fill="none" stroke="url(#hc-sk-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+        return;
+      }
+
       const hasAnyVal = pessoalMonths.some((value) => value !== 0);
       if (!hasData || !hasAnyVal) {
-        const msg = !hasData ? "Sem dados" : "Sem lancamentos de pessoal";
+        const msg = !hasData ? "Sem dados" : "Sem lançamentos de pessoal";
         el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:100%">
           <text x="${W / 2}" y="${H / 2}" style="fill:var(--text-faint);font-size:10px;text-anchor:middle;font-family:inherit">${escapeHtml(msg)}</text>
         </svg>`;
