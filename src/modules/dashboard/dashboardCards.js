@@ -435,40 +435,60 @@
         }
       }
 
-      // O total acima (KPI) é consolidado (empresa). Já o DRILL (popover ao clicar)
-      // respeita o acesso: Gestor/Analista só veem colaboradores da sua gestão.
+      // Drill: Gestor/Analista só podem detalhar nas suas gestões permitidas.
+      // Se estiver no consolidado "Marcher", mostra aviso pedindo para filtrar.
       const _hcRole = state.profile?.accessRole || "admin";
-      const _hcUserMgmt = (state.profile?.management || "").trim();
-      const drillRestricted = (_hcRole === "manager" || _hcRole === "analyst") && _hcUserMgmt;
-      const drillSource = drillRestricted
-        ? filtered.filter((row) => (row.management || "").trim() === _hcUserMgmt)
-        : filtered;
+      const isRestricted = (_hcRole === "manager" || _hcRole === "analyst");
+      const allowedHcMgmts = getAllowedManagements();
 
-      const mgmtMap = new Map();
-      for (const row of drillSource) {
-        const mgmt = row.management || "Sem area";
-        if (!mgmtMap.has(mgmt)) mgmtMap.set(mgmt, []);
-        mgmtMap.get(mgmt).push({
-          ...row,
-          ccName: (() => {
-            const cc = state.costCenters.find((costCenter) => costCenter.number === row.cost_center_number);
-            return cc?.name || row.cost_center_number || "";
-          })()
-        });
-      }
-
-      const byMgmt = [...mgmtMap.entries()]
-        .map(([mgmt, entries]) => ({ mgmt, count: entries.length, entries }))
-        .sort((a, b) => b.count - a.count);
-
-      const drillTotal = drillSource.length;
-      const initialMgmt = drillRestricted && byMgmt.length === 1 ? byMgmt[0].mgmt : null;
       const kpiBlock = totalEl.closest(".dash-hc-kpi-block");
-      if (kpiBlock && headcount > 0 && byMgmt.length > 0) {
+      if (kpiBlock && headcount > 0) {
         const newBlock = kpiBlock.cloneNode(true);
         kpiBlock.parentNode.replaceChild(newBlock, kpiBlock);
         newBlock.style.cursor = "pointer";
-        newBlock.addEventListener("click", () => openHcMgmtPopover(byMgmt, drillTotal, initialMgmt));
+
+        if (isRestricted && dashHcMgmt === "Marcher") {
+          newBlock.addEventListener("click", () => {
+            document.querySelector("#dash-hc-noaccess-pop")?.remove();
+            const pop = document.createElement("div");
+            pop.id = "dash-hc-noaccess-pop";
+            pop.style.cssText = "position:fixed;z-index:9900;background:var(--panel);border:0.5px solid var(--line);" +
+              "border-radius:10px;padding:12px 14px;max-width:300px;box-shadow:0 16px 40px rgba(0,0,0,0.5);" +
+              "font-size:0.78rem;color:var(--text-soft);line-height:1.4;display:flex;align-items:center;gap:9px;" +
+              "left:50%;top:50%;transform:translate(-50%,-50%)";
+            pop.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12.5"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>` +
+              `<span>O detalhamento está disponível apenas para as áreas da sua gestão. Selecione uma delas no filtro acima.</span>`;
+            document.body.appendChild(pop);
+            const dismiss = (e) => { if (!pop.contains(e.target)) { pop.remove(); document.removeEventListener("click", dismiss, true); } };
+            setTimeout(() => document.addEventListener("click", dismiss, true), 0);
+            setTimeout(() => { pop.remove(); document.removeEventListener("click", dismiss, true); }, 4500);
+          });
+        } else {
+          const drillSource = (isRestricted && allowedHcMgmts)
+            ? filtered.filter((row) => allowedHcMgmts.includes((row.management || "").trim()))
+            : filtered;
+
+          const mgmtMap = new Map();
+          for (const row of drillSource) {
+            const mgmt = row.management || "Sem area";
+            if (!mgmtMap.has(mgmt)) mgmtMap.set(mgmt, []);
+            mgmtMap.get(mgmt).push({
+              ...row,
+              ccName: (() => {
+                const cc = state.costCenters.find((costCenter) => costCenter.number === row.cost_center_number);
+                return cc?.name || row.cost_center_number || "";
+              })()
+            });
+          }
+          const byMgmt = [...mgmtMap.entries()]
+            .map(([mgmt, entries]) => ({ mgmt, count: entries.length, entries }))
+            .sort((a, b) => b.count - a.count);
+          const drillTotal = drillSource.length;
+          const initialMgmt = byMgmt.length === 1 ? byMgmt[0].mgmt : (dashHcMgmt !== "Marcher" ? dashHcMgmt : null);
+          if (byMgmt.length > 0) {
+            newBlock.addEventListener("click", () => openHcMgmtPopover(byMgmt, drillTotal, initialMgmt));
+          }
+        }
       }
     }
 
@@ -486,26 +506,23 @@
       const chartH = H - PAD_B - PAD_T;
 
       if (isLoading) {
-        const skPts = [0,18,32,22,38,28,20,12,24,30,22,16].map((v, i) => ({
-          x: PAD_L + i * (chartW / 11) + chartW / 22,
-          y: PAD_T + chartH - (v / 40) * chartH
-        }));
-        let skPath = `M ${skPts[0].x.toFixed(1)} ${skPts[0].y.toFixed(1)}`;
-        for (let i = 1; i < skPts.length; i++) {
-          const prev = skPts[i - 1], curr = skPts[i];
-          const cpX = ((prev.x + curr.x) / 2).toFixed(1);
-          skPath += ` C ${cpX} ${prev.y.toFixed(1)}, ${cpX} ${curr.y.toFixed(1)}, ${curr.x.toFixed(1)} ${curr.y.toFixed(1)}`;
-        }
+        const cy = H / 2;
+        const cx = W / 2;
+        const r = 3.5;
+        const gap = 12;
         el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:100%">
-          <defs>
-            <linearGradient id="hc-sk-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="var(--text-faint)" stop-opacity="0.15"/>
-              <stop offset="50%" stop-color="var(--text-faint)" stop-opacity="0.45"/>
-              <stop offset="100%" stop-color="var(--text-faint)" stop-opacity="0.15"/>
-              <animateTransform attributeName="gradientTransform" type="translate" from="-1 0" to="1 0" dur="1.4s" repeatCount="indefinite"/>
-            </linearGradient>
-          </defs>
-          <path d="${skPath}" fill="none" stroke="url(#hc-sk-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="${cx - gap}" cy="${cy}" r="${r}" fill="var(--text-faint)" opacity="0.3">
+            <animate attributeName="opacity" values="0.3;1;0.3" dur="1s" begin="0s" repeatCount="indefinite"/>
+            <animate attributeName="r" values="${r};${r + 1.2};${r}" dur="1s" begin="0s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--text-faint)" opacity="0.3">
+            <animate attributeName="opacity" values="0.3;1;0.3" dur="1s" begin="0.2s" repeatCount="indefinite"/>
+            <animate attributeName="r" values="${r};${r + 1.2};${r}" dur="1s" begin="0.2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="${cx + gap}" cy="${cy}" r="${r}" fill="var(--text-faint)" opacity="0.3">
+            <animate attributeName="opacity" values="0.3;1;0.3" dur="1s" begin="0.4s" repeatCount="indefinite"/>
+            <animate attributeName="r" values="${r};${r + 1.2};${r}" dur="1s" begin="0.4s" repeatCount="indefinite"/>
+          </circle>
         </svg>`;
         return;
       }
