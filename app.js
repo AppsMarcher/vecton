@@ -2055,7 +2055,7 @@ const REPORT_TITLES = {
     const { selectedMgmt, locked: mgmtLocked, allowedMgmts } = resolveManagementFilter(prevMgmt, baseMgmtOptions, allOption);
     const mgmtOptions = mgmtLocked ? [selectedMgmt] : (allowedMgmts || baseMgmtOptions);
 
-    const validCcFilter = buildOpexCostCenterFilter(selectedMgmt);
+    const validCcFilter = buildEffectiveOpexFilter(selectedMgmt);
 
     const header = `
       <div class="opex-filter-bar">
@@ -2125,6 +2125,7 @@ const REPORT_TITLES = {
         }).catch(() => {});
       }
     } else {
+      const effectiveCcIds = [...(validCcFilter?.ids || [])].filter(Boolean);
       const mgmtCacheKey = `opex-mgmt-${year}-${selectedMgmt}`;
       const cached = reportsLedgerCache.get(mgmtCacheKey);
       if (cached) {
@@ -2134,7 +2135,7 @@ const REPORT_TITLES = {
         if (tableEl) initOpexDrilldown(tableEl, cached.rows, null);
       } else {
         detailPanel.innerHTML = `<div class="opex-report-wrap reports-table-wrap"><div id="opex-table-inner">${vpSkeletonTable()}</div></div>`;
-        fetchActualsLedgerForManagementYear(year, selectedMgmt).then((rows) => {
+        fetchActualsLedgerForCcIds(year, effectiveCcIds).then((rows) => {
           reportsLedgerCache.set(mgmtCacheKey, { rows });
           if (selectedReportId === "opexReal" && detailPanel.dataset.opexMgmt === selectedMgmt) renderReportsView();
         }).catch(() => {
@@ -3028,9 +3029,9 @@ function renderOpexBudgetReport(detailPanel) {
   const allOption  = "Marcher";
   const baseMgmtOptions = [allOption, ...managements];
   const prevMgmt   = detailPanel.dataset.opexMgmt || allOption;
-  const { selectedMgmt, locked: mgmtLocked } = resolveManagementFilter(prevMgmt, baseMgmtOptions, allOption);
-  const mgmtOptions = mgmtLocked ? [selectedMgmt] : baseMgmtOptions;
-  const validCcFilter = buildOpexCostCenterFilter(selectedMgmt);
+  const { selectedMgmt, locked: mgmtLocked, allowedMgmts } = resolveManagementFilter(prevMgmt, baseMgmtOptions, allOption);
+  const mgmtOptions = mgmtLocked ? [selectedMgmt] : (allowedMgmts || baseMgmtOptions);
+  const validCcFilter = buildEffectiveOpexFilter(selectedMgmt);
 
   // ── Slot de filtro no header global (Gestão + esconder zeros) ──────────────
   const opexSlot = document.querySelector("#opex-gestao-slot");
@@ -3095,7 +3096,8 @@ function renderOpexBudgetReport(detailPanel) {
       renderBudgetOpexTable(cached.rows || []);
     } else {
       detailPanel.innerHTML = `<div class="opex-report-wrap reports-table-wrap"><div id="opex-budget-table-inner">${vpSkeletonTable()}</div></div>`;
-      fetchBudgetLedgerForManagementYear(year, selectedMgmt)
+      const effectiveCcIds = [...(validCcFilter?.ids || [])].filter(Boolean);
+      fetchBudgetLedgerForCcIds(year, effectiveCcIds)
         .then((rows) => {
           reportsLedgerCache.set(mgmtCacheKey, { rows });
           if (selectedReportId === "opexBudget") renderReportsView();
@@ -3244,6 +3246,25 @@ function buildOpexRealTableMarkup(ledgerRows, validCcFilter, hideZeros = false) 
   `;
 }
 // ─── FIM OPEX REAL ────────────────────────────────────────────────────────────
+
+// Versão "efetiva" do filtro OPEX: gestão selecionada + extra_cc_ids do perfil.
+// Usado no OPEX Real/Budget para Gestor/Analista com CCs avulsos extras.
+function buildEffectiveOpexFilter(selectedMgmt) {
+  const base = buildOpexCostCenterFilter(selectedMgmt);
+  if (!isAccessRestricted()) return base;
+  const extraIds = getExtraCcIds() || [];
+  if (!extraIds.length) return base;
+  const ids = new Set([...(base?.ids || [])]);
+  const numbers = new Set([...(base?.numbers || [])]);
+  (state.costCenters || []).forEach((cc) => {
+    if (extraIds.some(id => String(id) === String(cc.id))) {
+      if (cc.id) ids.add(String(cc.id).trim());
+      const n = normalizeCode(cc.number);
+      if (n) numbers.add(n);
+    }
+  });
+  return { ids, numbers };
+}
 
 // management: string (única) ou array de strings. null/"Marcher" = sem filtro.
 function buildOpexCostCenterFilter(management) {
