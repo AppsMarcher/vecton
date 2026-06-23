@@ -61,7 +61,7 @@
         return;
       }
 
-      tableWrap.innerHTML = buildDreGerRealTableMarkup(report);
+      tableWrap.innerHTML = buildDreGerRealTableMarkup(report, !isAccessRestricted());
       initAllReportTableResizers();
       if (!isAccessRestricted()) initDreGerDrilldown(tableWrap, cacheEntry?.rows || [], year, "real");
     }
@@ -144,7 +144,7 @@
         return;
       }
 
-      tableWrap.innerHTML = buildDreGerRealTableMarkup(report);
+      tableWrap.innerHTML = buildDreGerRealTableMarkup(report, !isAccessRestricted());
       initAllReportTableResizers();
       if (!isAccessRestricted()) initDreGerDrilldown(tableWrap, cacheEntry?.rows || [], year, "budget");
     }
