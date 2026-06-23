@@ -599,7 +599,8 @@
             full_name: overlay.querySelector("#inv-name").value.trim(),
             department: overlay.querySelector("#inv-dept").value.trim(),
             access_role: role,
-            management: ["manager", "analyst"].includes(role) ? mgmt : null
+            management: ["manager", "analyst"].includes(role) ? mgmt : null,
+            redirect_to: window.location.origin + window.location.pathname
           });
           close();
           allUsers = []; // força refetch fresco
