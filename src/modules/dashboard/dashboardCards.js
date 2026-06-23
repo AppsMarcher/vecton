@@ -17,6 +17,7 @@
       fetchActualsLedgerForCcIds,
       getAllowedManagements,
       getPartialManagements,
+      getExtraCcIds,
       buildOpexCostCenterFilter,
       matchesOpexCostCenterFilter,
       renderNavigation,
@@ -437,10 +438,16 @@
       }
 
       // Drill: Gestor/Analista só podem detalhar nas suas gestões permitidas.
-      // Se estiver no consolidado "Marcher", mostra aviso pedindo para filtrar.
+      // Se estiver no consolidado "Marcher" sem gestão nem CCs extras, mostra aviso.
       const _hcRole = state.profile?.accessRole || "admin";
       const isRestricted = (_hcRole === "manager" || _hcRole === "analyst");
       const allowedHcMgmts = getAllowedManagements();
+      const hcExtraCcIds = getExtraCcIds ? (getExtraCcIds() || []).map(String) : [];
+      const hasExtraCcs = hcExtraCcIds.length > 0;
+
+      // Usuário parcial (management=null + extra_cc_ids): fica preso em "Marcher"
+      // mas ainda pode detalhar os seus CCs avulsos — não bloqueia com o aviso.
+      const showNoAccessPop = isRestricted && dashHcMgmt === "Marcher" && !hasExtraCcs;
 
       const kpiBlock = totalEl.closest(".dash-hc-kpi-block");
       if (kpiBlock && headcount > 0) {
@@ -448,7 +455,7 @@
         kpiBlock.parentNode.replaceChild(newBlock, kpiBlock);
         newBlock.style.cursor = "pointer";
 
-        if (isRestricted && dashHcMgmt === "Marcher") {
+        if (showNoAccessPop) {
           newBlock.addEventListener("click", () => {
             document.querySelector("#dash-hc-noaccess-pop")?.remove();
             const pop = document.createElement("div");
@@ -465,9 +472,17 @@
             setTimeout(() => { pop.remove(); document.removeEventListener("click", dismiss, true); }, 4500);
           });
         } else {
-          const drillSource = (isRestricted && allowedHcMgmts)
-            ? filtered.filter((row) => allowedHcMgmts.includes((row.management || "").trim()))
-            : filtered;
+          // Para usuário parcial em "Marcher": filtra só os CCs extras.
+          // Para Gestor/Analista normal: filtra pelas gestões permitidas.
+          // Para admin: usa tudo.
+          let drillSource;
+          if (isRestricted && dashHcMgmt === "Marcher" && hasExtraCcs) {
+            drillSource = filtered.filter((row) => hcExtraCcIds.includes(String(row.cost_center_number)));
+          } else if (isRestricted && allowedHcMgmts) {
+            drillSource = filtered.filter((row) => allowedHcMgmts.includes((row.management || "").trim()));
+          } else {
+            drillSource = filtered;
+          }
 
           const mgmtMap = new Map();
           for (const row of drillSource) {
