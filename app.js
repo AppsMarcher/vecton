@@ -744,6 +744,7 @@ const reportsOpexModule = createReportsOpexModule({
   buildOpexRealTableMarkup,
   initOpexDrilldown,
   initAllReportTableResizers,
+  initFloatingScrollbar,
   fetchActualsLedgerWithCcForYear,
   fetchActualsLedgerForManagementYear,
   renderReportsView,
