@@ -5786,18 +5786,20 @@ table th,
 .fc-swatch.fc-active { border-color: var(--text); transform: scale(1.15); }
 
 .fc-icon-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   border: 1.5px solid var(--line);
-  background: transparent;
-  font-size: 1.1rem;
+  background: rgba(255,255,255,0.04);
+  color: var(--text-soft);
   cursor: pointer;
-  transition: border-color .1s, background .1s;
+  transition: border-color .1s, background .1s, color .1s;
   display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
 }
-.fc-icon-btn:hover { border-color: var(--blue); background: var(--blue-soft); }
-.fc-icon-btn.fc-active { border-color: var(--blue); background: var(--blue-soft); }
+.fc-icon-btn svg { width: 18px; height: 18px; pointer-events: none; }
+.fc-icon-btn:hover { border-color: var(--blue); background: var(--blue-soft); color: var(--blue); }
+.fc-icon-btn.fc-active { border-color: var(--blue); background: var(--blue-soft); color: var(--blue); }
 
 /* linha de meses */
 .fc-months-row {
@@ -5897,9 +5899,9 @@ table th,
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
   flex-shrink: 0;
 }
+.fc-detail-icon svg { width: 24px; height: 24px; }
 .fc-detail-name {
   font-size: 1.1rem;
   font-weight: 700;
