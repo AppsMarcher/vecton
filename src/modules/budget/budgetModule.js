@@ -60,6 +60,9 @@
     let rowsFilter = "";
     let activeErrorRowId = null;
     let selectedLoadType = null;
+    let selectedScenarioTarget = "budget"; // "budget" | forecast scenario UUID
+    let availableScenarios = null;         // null = not loaded for current year
+    let availableScenariosYear = null;     // year for which scenarios were loaded
     const loadingBatchIds = new Set();
     const ROWS_PER_PAGE = 200;
 
@@ -161,6 +164,12 @@
                   <option value="complete">Carga completa</option>
                   <option value="additional">Carga adicional</option>
                 </select>
+                <div class="budget-target-wrap">
+                  <span class="budget-target-label">Destino</span>
+                  <select id="budget-scenario-select" class="actuals-mode-select">
+                    <option value="budget">Budget (Orçamento)</option>
+                  </select>
+                </div>
               </div>
               <a href="https://jwjnvxshtdekzcprmsyl.supabase.co/storage/v1/object/public/Vecton_Templates/modelo-carga-dre.xlsx" download="modelo-carga-dre.xlsx" title="Baixar modelo de carga" style="display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-alt);color:var(--text-faint);font-size:0.72rem;text-decoration:none;flex-shrink:0;transition:color .15s,border-color .15s" onmouseover="this.style.color='var(--blue)';this.style.borderColor='var(--blue)'" onmouseout="this.style.color='var(--text-faint)';this.style.borderColor='var(--line)'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Modelo</a>
             </div>
@@ -280,6 +289,10 @@
       const batchList = document.querySelector("#budget-batch-list");
       const rowsBody = document.querySelector("#budget-rows-body");
 
+      document.querySelector("#budget-scenario-select")?.addEventListener("change", (e) => {
+        selectedScenarioTarget = e.target.value || "budget";
+      });
+
       uploadForm?.addEventListener("submit", handleBudgetUploadSubmit);
       manualBatchButton?.addEventListener("click", handleCreateManualBudgetBatch);
       addRowButton?.addEventListener("click", handleAddBudgetRow);
@@ -364,6 +377,14 @@
       if (periodLabel) {
         periodLabel.textContent = `${formatMonthLabel(state.currentPeriod.month)}/${state.currentPeriod.year}`;
       }
+
+      const year = Number(state.currentPeriod?.year || 2026);
+      if (availableScenariosYear !== year) {
+        availableScenarios = null;
+        if (selectedScenarioTarget !== "budget") selectedScenarioTarget = "budget";
+      }
+      loadAvailableScenarios(year).then(() => populateScenarioSelect());
+
       const selectedBatch = getSelectedBudgetBatch();
       if (selectedBatch) {
         loadModeSelect.value = selectedBatch.loadMode;
@@ -638,7 +659,7 @@
         return;
       }
 
-      if (loadMode === "complete") {
+      if (loadMode === "complete" && selectedScenarioTarget === "budget") {
         const confirmed = await appConfirm("Carga completa vai apagar o planejado existente da competencia e substituir. Deseja continuar?", "warn");
         if (!confirmed) return;
       }
@@ -732,12 +753,32 @@
       if (batch.status === "applied") return true;
       if (batch.status === "error" || batch.status === "draft") return false;
 
+      const scenarioId = selectedScenarioTarget !== "budget" ? selectedScenarioTarget : null;
+      const scenarioName = scenarioId
+        ? (availableScenarios || []).find(s => s.id === scenarioId)?.name || "cenário"
+        : null;
+
       if (batch.loadMode === "complete" && !auto) {
-        const confirmed = await appConfirm("Carga completa vai apagar o planejado existente da competencia e substituir. Deseja continuar?", "warn");
+        const destLabel = scenarioName
+          ? `cenário "${scenarioName}"`
+          : "planejado (Budget)";
+        const confirmed = await appConfirm(
+          `Carga completa vai apagar as entradas existentes de ${destLabel} para ${formatMonthLabel(batch.referenceMonth)}/${batch.referenceYear} e substituir. Deseja continuar?`,
+          "warn"
+        );
         if (!confirmed) return false;
       }
 
       if (isSupabaseConfigured()) {
+        // → Forecast scenario
+        if (scenarioId) {
+          setSyncStatus(`Aplicando carga no cenário "${scenarioName}"…`, "warn");
+          await applyBatchToForecast(batchId, scenarioId);
+          setSyncStatus(`Carga aplicada no cenário "${scenarioName}"`, "ok");
+          return true;
+        }
+
+        // → Budget (existing RPC path)
         setSyncStatus(auto ? "Aplicando carga de planejado no BD..." : "Aplicando lote de planejado no BD...", "warn");
         await callSupabaseRpc("apply_budget_import_batch", { target_batch_id: batch.id });
         invalidateBudgetReportsForYear(batch.referenceYear);
@@ -1056,6 +1097,88 @@
         validationStatus: errors.length ? "error" : "valid",
         validationErrors: errors
       };
+    }
+
+    async function loadAvailableScenarios(year) {
+      if (availableScenarios !== null && availableScenariosYear === year) return;
+      try {
+        const orgId = await resolveOrganizationId();
+        const rows = await fetchSupabaseRowsSafe(
+          "forecast_scenarios",
+          `organization_id=eq.${orgId}&reference_year=eq.${year}&order=sort_order.asc,created_at.asc&select=id,name,color,icon`
+        );
+        availableScenarios = rows || [];
+        availableScenariosYear = year;
+      } catch (err) {
+        console.warn("Não foi possível carregar cenários de forecast:", err);
+        availableScenarios = [];
+      }
+    }
+
+    function populateScenarioSelect() {
+      const sel = document.querySelector("#budget-scenario-select");
+      if (!sel) return;
+      sel.innerHTML = [
+        `<option value="budget">Budget (Orçamento)</option>`,
+        ...(availableScenarios || []).map(s =>
+          `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)}</option>`
+        )
+      ].join("");
+      sel.value = selectedScenarioTarget;
+      if (sel.value !== selectedScenarioTarget) sel.value = "budget";
+    }
+
+    async function applyBatchToForecast(batchId, scenarioId) {
+      const batch = getBudgetBatchById(batchId);
+      if (!batch) throw new Error("Lote não encontrado.");
+
+      const validRows = (state.budgetRowsByBatch[batchId] || []).filter(r => r.validationStatus === "valid");
+      if (!validRows.length) throw new Error("Nenhuma linha válida no lote.");
+
+      const orgId = await resolveOrganizationId();
+
+      if (batch.loadMode === "complete") {
+        setSyncStatus("Limpando entradas anteriores do cenário…", "warn");
+        await deleteSupabaseRows(
+          "forecast_ledger_entries",
+          `organization_id=eq.${orgId}&scenario_id=eq.${scenarioId}&reference_year=eq.${batch.referenceYear}&reference_month=eq.${batch.referenceMonth}`
+        );
+      }
+
+      const ledgerRows = validRows.map(r => ({
+        id:                  crypto.randomUUID(),
+        organization_id:     orgId,
+        scenario_id:         scenarioId,
+        reference_year:      batch.referenceYear,
+        reference_month:     batch.referenceMonth,
+        account_number:      r.accountNumber,
+        cost_center_id:      null,
+        cost_center_number:  r.costCenterNumber || null,
+        amount:              r.amount ?? 0,
+        entry_date:          null,
+        history:             r.history || null,
+      }));
+
+      const CHUNK = 500;
+      for (let i = 0; i < ledgerRows.length; i += CHUNK) {
+        setSyncStatus(`Gravando entradas: ${i + 1}–${Math.min(i + CHUNK, ledgerRows.length)} de ${ledgerRows.length}…`, "warn");
+        await upsertSupabaseRows("forecast_ledger_entries", ledgerRows.slice(i, i + CHUNK), ["id"]);
+      }
+
+      // Mark batch as applied in DB (partial upsert — Supabase merge-duplicates preserves other columns)
+      await upsertSupabaseRows("budget_import_batches", [{
+        id:         batchId,
+        status:     "applied",
+        applied_at: new Date().toISOString(),
+      }], ["id"]);
+
+      // Sync local state
+      const localBatch = getBudgetBatchById(batchId);
+      if (localBatch) {
+        localBatch.status    = "applied";
+        localBatch.appliedAt = new Date().toISOString();
+      }
+      persistAndRender();
     }
 
     async function parseBudgetFile(file) {
