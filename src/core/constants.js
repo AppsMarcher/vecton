@@ -66,8 +66,9 @@ const ROOT_CC_NODE = {
 };
 
 const VIEW_HEADER_METADATA = {
-  dashboard: { kicker: "DASHBOARD", title: "Cockpit Executivo" },
-  reports: { kicker: "RELATÓRIOS", title: "Central de relatórios" },
+  dashboard: { kicker: "DASHBOARD",     title: "Cockpit Executivo" },
+  planning:  { kicker: "PLANEJAMENTO",  title: "Repositório de Cenários" },
+  reports:   { kicker: "RELATÓRIOS",    title: "Central de relatórios" },
   branchPlan: { kicker: "PARÂMETROS", title: "Empresa / filial" },
   drePlan:     { kicker: "PARÂMETROS", title: "Plano de contas" },
   managements: { kicker: "PARÂMETROS", title: "Gestões" },

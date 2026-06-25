@@ -99,13 +99,12 @@
           const tableEl = detailPanel.querySelector(".reports-opex-table");
           if (tableEl) initOpexDrilldown(tableEl, cachedCc.rows, null);
         } else {
-          fetchActualsLedgerWithCcForYear(year).then((rowsWithCc) => {
-            reportsLedgerCache.set(ccCacheKey, { rows: rowsWithCc });
-            if (getSelectedReportId() === "opexReal") {
-              const tableEl = detailPanel.querySelector(".reports-opex-table");
-              if (tableEl) initOpexDrilldown(tableEl, rowsWithCc, null);
-            }
-          }).catch(() => {});
+          // Anexa click handler imediatamente — mostra loading até dados chegarem
+          const ccFetchPromise = fetchActualsLedgerWithCcForYear(year)
+            .then((rowsWithCc) => { reportsLedgerCache.set(ccCacheKey, { rows: rowsWithCc }); return rowsWithCc; })
+            .catch(() => []);
+          const tableEl = detailPanel.querySelector(".reports-opex-table");
+          if (tableEl) initOpexDrilldown(tableEl, null, null, ccFetchPromise);
         }
       } else {
         const isPartial = partialMgmts?.has(selectedMgmt);

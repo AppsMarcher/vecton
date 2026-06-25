@@ -63,6 +63,8 @@ const { createDashboardModule } = window.VECTON_DASHBOARD_MODULE;
 const { createDashboardVisualsModule } = window.VECTON_DASHBOARD_VISUALS;
 const { appAlert, appConfirm } = window.VECTON_DIALOGS;
 const { startMarketTicker } = window.VECTON_MARKET_TICKER;
+const { createReportsBuilderModule } = window.VECTON_REPORTS_BUILDER || {};
+const { createForecastModule } = window.VECTON_FORECAST || {};
 
 const FUN_AVATARS = buildFunAvatars();
 
@@ -148,6 +150,7 @@ const paramsSubmenu = document.querySelector("#params-submenu");
 const paramsCaret = document.querySelector("#params-caret");
 const views = {
   dashboard: document.querySelector("#dashboard-view"),
+  planning:  document.querySelector("#planning-view"),
   reports: document.querySelector("#reports-view"),
   branchPlan: document.querySelector("#branchPlan-view"),
   drePlan: document.querySelector("#drePlan-view"),
@@ -610,6 +613,18 @@ const { loadAndRenderManagements, bindManagementsAddButton } = createManagements
   appAlert,
   appConfirm
 });
+const { renderPlanningView, resetPlanningState } = createForecastModule
+  ? createForecastModule({
+      escapeHtml,
+      state,
+      MONTH_LABELS,
+      resolveOrganizationId,
+      fetchSupabaseRowsSafe,
+      upsertSupabaseRows,
+      isAdmin,
+    })
+  : { renderPlanningView: () => {}, resetPlanningState: () => {} };
+
 const shellEventsModule = createShellEventsModule({
   appLayout,
   sidebar,
@@ -650,7 +665,10 @@ const shellEventsModule = createShellEventsModule({
   setSelectedActualsLoadType,
   loadAndRenderUsers,
   loadAndRenderManagements,
-  bindManagementsAddButton
+  bindManagementsAddButton,
+  renderPlanningView,
+  resetPlanningState,
+  getPlanningContainer: () => document.querySelector("#planning-view"),
 });
 const editorEventsModule = createEditorEventsModule({
   dreNodeForm,
@@ -845,6 +863,26 @@ const renderModule = createRenderModule({
   renderDashboard
 });
 
+const _noop = { loadCustomReports: async () => [], injectCatalogCards: () => {}, handleBuilderView: () => false };
+const reportsBuilderModule = createReportsBuilderModule ? createReportsBuilderModule({
+  state,
+  escapeHtml,
+  MONTH_LABELS,
+  fetchActualsLedgerWithCcForYear,
+  reportsLedgerCache,
+  fetchSupabaseRowsSafe,
+  isSupabaseConfigured,
+  resolveOrganizationId,
+  getAllowedCcNumbers,
+  getAccessRole,
+  getCurrentUser: () => currentUser,
+  supabaseApiUrl: supabaseConfig.projectUrl,
+  authenticatedFetch,
+  setSelectedReportId: (value) => { selectedReportId = value; },
+  renderReportsView,
+  getReportTitles: () => REPORT_TITLES,
+}) : _noop;
+
 bootstrap();
 
 async function bootstrap() {
@@ -944,6 +982,15 @@ function initReportCardEdit() {
     return;
   }
   document.body.classList.add("can-edit-reports");
+
+  const newReportBtn = document.querySelector("#reports-new-report-btn");
+  if (newReportBtn) {
+    newReportBtn.style.display = "";
+    newReportBtn.onclick = () => {
+      selectedReportId = "__new_report__";
+      renderReportsView();
+    };
+  }
 
   const grid = document.querySelector("#reports-card-grid");
   if (!grid) return;
@@ -1299,6 +1346,7 @@ async function hydrateFromSupabase() {
     applyReportLabels();
     applyReportAccess();
     initReportCardEdit();
+    void reportsBuilderModule.loadCustomReports().then(() => reportsBuilderModule.injectCatalogCards());
     setSyncStatus("Banco de Dados Online", "ok");
     if (canManageUsers()) void loadAndRenderUsers();
   } catch (error) {
@@ -1919,7 +1967,7 @@ async function fetchBudgetLedgerWithCcForYear(year) {
     while (true) {
       const page = await fetchSupabaseRowsSafe(
         "budget_ledger_entries",
-        `organization_id=eq.${organizationId}&reference_year=eq.${year}&reference_month=eq.${month}&id=gt.${lastId}&select=id,account_number,cost_center_id,cost_center_number,amount,reference_month&order=id.asc&limit=${pageSize}`
+        `organization_id=eq.${organizationId}&reference_year=eq.${year}&reference_month=eq.${month}&id=gt.${lastId}&select=id,account_number,cost_center_id,cost_center_number,amount,reference_month,entry_date,history&order=id.asc&limit=${pageSize}`
       );
       rows.push(...page);
       if (page.length < pageSize) break;
@@ -2021,6 +2069,7 @@ function renderHcReport(kind) {
 }
 
 const REPORT_TITLES = {
+  __new_report__: "Novo relatório",
   dreSocReal:    "DRE Societário Realizado",
   dreGerReal:    "DRE Gerencial Realizado",
   dreDfsReal:    "DRE DFs Realizado",
@@ -2146,14 +2195,12 @@ const REPORT_TITLES = {
         const tableEl = detailPanel.querySelector(".reports-opex-table");
         if (tableEl) initOpexDrilldown(tableEl, ccCached.rows, null);
       } else {
-        // Busca silenciosa em background para habilitar drilldown
-        fetchActualsLedgerWithCcForYear(year).then((rows) => {
-          reportsLedgerCache.set(ccCacheKey, { rows });
-          if (selectedReportId === "opexReal") {
-            const tableEl = detailPanel.querySelector(".reports-opex-table");
-            if (tableEl) initOpexDrilldown(tableEl, rows, null);
-          }
-        }).catch(() => {});
+        // Anexa click handler imediatamente — mostra loading até dados chegarem
+        const ccFetchPromise = fetchActualsLedgerWithCcForYear(year)
+          .then((rows) => { reportsLedgerCache.set(ccCacheKey, { rows }); return rows; })
+          .catch(() => []);
+        const tableEl = detailPanel.querySelector(".reports-opex-table");
+        if (tableEl) initOpexDrilldown(tableEl, null, null, ccFetchPromise);
       }
     } else {
       const effectiveCcIds = [...(validCcFilter?.ids || [])].filter(Boolean);
@@ -2257,6 +2304,7 @@ function renderReportsView() {
   }
 
   const rendered =
+    reportsBuilderModule.handleBuilderView(detailPanel, selectedReportId) ||
     reportsDreModule.renderSelectedDreReport(detailPanel, selectedReportId) ||
     reportsOpexModule.renderSelectedOpexReport(detailPanel, selectedReportId) ||
     reportsHeadcountModule.renderSelectedHeadcountReport(selectedReportId);
@@ -3106,13 +3154,12 @@ function renderOpexBudgetReport(detailPanel) {
       const tableEl = detailPanel.querySelector(".reports-opex-table");
       if (tableEl) initOpexDrilldown(tableEl, cachedCc.rows, null);
     } else {
-      fetchBudgetLedgerWithCcForYear(year).then((rowsWithCc) => {
-        reportsLedgerCache.set(ccCacheKey, { rows: rowsWithCc });
-        if (selectedReportId === "opexBudget") {
-          const tableEl = detailPanel.querySelector(".reports-opex-table");
-          if (tableEl) initOpexDrilldown(tableEl, rowsWithCc, null);
-        }
-      }).catch(() => {});
+      // Anexa click handler imediatamente — mostra loading até dados chegarem
+      const ccFetchPromise = fetchBudgetLedgerWithCcForYear(year)
+        .then((rowsWithCc) => { reportsLedgerCache.set(ccCacheKey, { rows: rowsWithCc }); return rowsWithCc; })
+        .catch(() => []);
+      const tableEl = detailPanel.querySelector(".reports-opex-table");
+      if (tableEl) initOpexDrilldown(tableEl, null, null, ccFetchPromise);
     }
   } else {
     const isPartial = partialMgmts?.has(selectedMgmt);
@@ -3348,24 +3395,29 @@ function matchesOpexCostCenterFilter(filter, costCenterId, costCenterNumber) {
 let _opexPopover = null;
 let _opexActiveCell = null;
 
-function initOpexDrilldown(tableEl, ledgerRows, validCcFilter) {
-  // Normaliza ledger CC
-  const normalized = ledgerRows.map((row) => ({
-    account:   normalizeCode(row.account_number ?? row.accountNumber),
-    ccId:      String(row.cost_center_id ?? row.costCenterId ?? "").trim(),
-    cc:        normalizeCode(row.cost_center_number ?? row.costCenterNumber),
-    month:     Number(row.reference_month ?? row.referenceMonth ?? extractMonthFromDate(row.entry_date ?? row.entryDate)),
-    date:      String(row.entry_date ?? row.entryDate ?? "").trim(),
-    history:   String(row.history ?? "").trim(),
-    amount:    Number(row.amount)
+function normalizeOpexRows(ledgerRows) {
+  return ledgerRows.map((row) => ({
+    account: normalizeCode(row.account_number ?? row.accountNumber),
+    ccId:    String(row.cost_center_id ?? row.costCenterId ?? "").trim(),
+    cc:      normalizeCode(row.cost_center_number ?? row.costCenterNumber),
+    month:   Number(row.reference_month ?? row.referenceMonth ?? extractMonthFromDate(row.entry_date ?? row.entryDate)),
+    date:    String(row.entry_date ?? row.entryDate ?? "").trim(),
+    history: String(row.history ?? "").trim(),
+    amount:  Number(row.amount)
   })).filter((r) => r.account && r.month >= 1 && r.month <= 12 && Number.isFinite(r.amount));
+}
 
-  // Mapa CC → nome
-  const ccNameMap = new Map(
-    state.costCenters.map((cc) => [normalizeCode(cc.number), cc.name || ""])
-  );
+// pendingPromise: Promise<rows[]> — quando dados ainda estão sendo buscados.
+// Passa null (ou omite) quando as linhas já estão disponíveis em ledgerRows.
+function initOpexDrilldown(tableEl, ledgerRows, validCcFilter, pendingPromise = null) {
+  let normalized = ledgerRows ? normalizeOpexRows(ledgerRows) : null;
 
-  tableEl.addEventListener("click", (event) => {
+  // Encadeia normalização na promise pendente (se houver)
+  const readyPromise = !normalized && pendingPromise
+    ? pendingPromise.then(rows => { normalized = normalizeOpexRows(rows); }).catch(() => { normalized = []; })
+    : null;
+
+  tableEl.addEventListener("click", async (event) => {
     const td = event.target.closest(".opex-drillable");
     if (!td) { closeOpexPopover(); return; }
 
@@ -3382,6 +3434,23 @@ function initOpexDrilldown(tableEl, ledgerRows, validCcFilter) {
     _opexActiveCell = td;
     td.classList.add("opex-drillable-active");
 
+    const accountName = td.closest("tr")?.querySelector(".opex-name-col span")?.textContent || account;
+    const monthLabel  = MONTH_LABELS[monthIdx] || String(monthIdx + 1);
+
+    // Mostra loading enquanto dados ainda estão sendo carregados
+    if (!normalized && readyPromise) {
+      const loadingPop = buildSocDrillLoadingPopover(accountName, monthLabel, account, monthIdx);
+      _opexPopover = loadingPop;
+      document.body.appendChild(loadingPop);
+      positionAuditPopover(loadingPop);
+      await readyPromise;
+      if (!document.body.contains(loadingPop)) return; // usuário fechou durante o carregamento
+      loadingPop.remove();
+      _opexPopover = null;
+    }
+
+    if (!normalized) return;
+
     const entries = normalized.filter((r) => {
       if (r.account !== account) return false;
       if (r.month - 1 !== monthIdx) return false;
@@ -3389,21 +3458,17 @@ function initOpexDrilldown(tableEl, ledgerRows, validCcFilter) {
       return true;
     });
 
-    // Converter para o formato esperado por buildSocDrillPopover
+    const total = entries.reduce((s, r) => s + r.amount, 0);
     const socEntries = entries.map(r => ({
-      entry_date:          r.date || "",
-      cc:                  r.cc   || "",
-      history:             r.history || "",
-      amount:              r.amount
+      date:    r.date    || "",
+      cc:      r.cc      || "",
+      history: r.history || "",
+      amount:  r.amount
     }));
-
-    const accountName = td.closest("tr")?.querySelector(".opex-name-col span")?.textContent || account;
-    const monthLabel  = MONTH_LABELS[monthIdx] || String(monthIdx + 1);
-    const total       = entries.reduce((s, r) => s + r.amount, 0);
 
     _opexPopover = buildSocDrillPopover(accountName, monthLabel, account, socEntries, total, monthIdx);
     document.body.appendChild(_opexPopover);
-    positionAuditPopover(_opexPopover, td.getBoundingClientRect());
+    positionAuditPopover(_opexPopover);
   });
 
   document.addEventListener("click", onDocClickCloseOpex, true);
@@ -3492,7 +3557,21 @@ function initDreGerDrilldown(tableWrap, ledgerRows, year, source = "real") {
 
     const byCode = new Map();
     if (allowedCcs) {
+      // Mostra loading enquanto o ledger detalhado ainda não foi buscado
+      let loadingPop = null;
+      if (!richFetched) {
+        loadingPop = buildSocDrillLoadingPopover(lineName, monthLabel, lineId, monthIdx);
+        loadingPop.dataset.lineId = lineId;
+        _auditPopover = loadingPop;
+        document.body.appendChild(loadingPop);
+        positionAuditPopover(loadingPop);
+      }
       await ensureRich();
+      if (loadingPop) {
+        if (!document.body.contains(loadingPop)) return; // usuário fechou durante carregamento
+        loadingPop.remove();
+        _auditPopover = null;
+      }
       (richRows || []).forEach(({ code, cc, month, amount }) => {
         if (month - 1 !== monthIdx) return;
         if (!codes.includes(code)) return;
@@ -3741,7 +3820,6 @@ function buildSocDrillEmptyPopover(lineName, monthLabel, code, monthIdx, message
 
 function buildSocDrillPopover(lineName, monthLabel, code, entries, total, monthIdx) {
   const fmt = (v) => formatSignedCurrency(v);
-  // Mapa cc_number → nome do CC
   const ccNameMap = new Map(state.costCenters.map(c => [String(c.number || ""), c.name || ""]));
   const fmtDate = (d) => {
     if (!d) return "—";
@@ -3749,22 +3827,47 @@ function buildSocDrillPopover(lineName, monthLabel, code, entries, total, monthI
     return m ? `${m[3]}/${m[2]}/${m[1]}` : d;
   };
 
-  const rows = entries
-    .slice()
-    .sort((a, b) => (a.date || "").localeCompare(b.date || ""))
-    .map((r) => `
+  let sortKey = "date", sortDir = 1;
+
+  function renderRows() {
+    return entries.slice().sort((a, b) => {
+      if (sortKey === "date")    return sortDir * (a.date    || "").localeCompare(b.date    || "");
+      if (sortKey === "cc")      return sortDir * (a.cc      || "").localeCompare(b.cc      || "");
+      if (sortKey === "history") return sortDir * (a.history || "").localeCompare(b.history || "");
+      if (sortKey === "amount")  return sortDir * (a.amount - b.amount);
+      return 0;
+    }).map((r) => `
       <tr>
         <td style="padding:4px 8px 4px 0;font-size:0.72rem;color:var(--text-faint);white-space:nowrap">${escapeHtml(fmtDate(r.date))}</td>
         <td style="padding:4px 8px;font-size:0.72rem;color:var(--text-faint);white-space:nowrap;font-family:monospace">${escapeHtml(r.cc || "—")}</td>
-        <td style="padding:4px 8px;font-size:0.72rem;color:var(--text-soft);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(ccNameMap.get(r.cc||"") || "")}">${escapeHtml(ccNameMap.get(r.cc||"") || "—")}</td>
-        <td style="padding:4px 8px;font-size:0.72rem;color:var(--text-soft);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(r.history)}">${escapeHtml(r.history || "—")}</td>
-        <td style="padding:4px 0 4px 8px;font-size:0.72rem;color:var(--text);text-align:right;white-space:nowrap">${escapeHtml(fmt(r.amount))}</td>
+        <td style="padding:4px 8px;font-size:0.72rem;color:var(--text-soft);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(ccNameMap.get(r.cc || "") || "")}">${escapeHtml(ccNameMap.get(r.cc || "") || "—")}</td>
+        <td style="padding:4px 8px;font-size:0.72rem;color:var(--text-soft);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(r.history || "")}">${escapeHtml(r.history || "—")}</td>
+        <td style="padding:4px 0 4px 8px;font-size:0.72rem;color:${r.amount < 0 ? "var(--neg)" : "var(--text)"};text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums">${escapeHtml(fmt(r.amount))}</td>
       </tr>`).join("");
+  }
+
+  function thSort(key, pad, align) {
+    const active = sortKey === key;
+    const color = active ? "var(--blue)" : "var(--text-faint)";
+    const dir = active ? (sortDir === 1 ? " ↑" : " ↓") : "";
+    const cols = { date: "Data", cc: "CC", history: "Histórico", amount: "Valor" };
+    return `<th data-sort="${key}" style="padding:${pad};font-size:0.62rem;color:${color};text-align:${align};font-weight:500;white-space:nowrap;cursor:pointer;user-select:none">${cols[key]}${dir}</th>`;
+  }
+
+  function renderThead() {
+    return `
+      ${thSort("date",    "3px 8px 6px 0", "left")}
+      ${thSort("cc",      "3px 8px 6px",   "left")}
+      <th style="padding:3px 8px 6px;font-size:0.62rem;color:var(--text-faint);font-weight:500">Nome CC</th>
+      ${thSort("history", "3px 8px 6px",   "left")}
+      ${thSort("amount",  "3px 0 6px 8px", "right")}
+    `;
+  }
 
   const pop = document.createElement("div");
   pop.dataset.code = code;
   pop.dataset.monthIdx = String(monthIdx);
-  pop.style.cssText = "position:fixed;z-index:9800;background:var(--panel);border:0.5px solid var(--line);border-radius:12px;padding:16px 20px;min-width:560px;max-width:700px;max-height:70vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,0.55)";
+  pop.style.cssText = "position:fixed;z-index:9800;background:var(--panel);border:0.5px solid var(--line);border-radius:12px;padding:16px 20px;min-width:560px;max-width:700px;box-shadow:0 20px 50px rgba(0,0,0,0.55)";
   pop.innerHTML = `
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
       <div>
@@ -3773,24 +3876,28 @@ function buildSocDrillPopover(lineName, monthLabel, code, entries, total, monthI
       </div>
       <button onclick="this.closest('[data-code]').remove()" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:18px;padding:0 0 0 12px;line-height:1">×</button>
     </div>
-    <div style="margin-bottom:12px;padding-bottom:10px;border-bottom:0.5px solid var(--line)">
+    <div style="display:flex;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:0.5px solid var(--line)">
       <span style="font-size:1.1rem;font-weight:700;color:var(--text)">${escapeHtml(fmt(total))}</span>
       <span style="font-size:0.72rem;color:var(--text-faint);margin-left:8px">${entries.length} lançamento(s)</span>
     </div>
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse">
-        <thead>
-          <tr style="border-bottom:0.5px solid var(--line)">
-            <th style="padding:3px 8px 6px 0;font-size:0.62rem;color:var(--text-faint);text-align:left;font-weight:500;white-space:nowrap">Data</th>
-            <th style="padding:3px 8px 6px;font-size:0.62rem;color:var(--text-faint);text-align:left;font-weight:500">CC</th>
-            <th style="padding:3px 8px 6px;font-size:0.62rem;color:var(--text-faint);text-align:left;font-weight:500">Nome CC</th>
-            <th style="padding:3px 8px 6px;font-size:0.62rem;color:var(--text-faint);text-align:left;font-weight:500">Histórico</th>
-            <th style="padding:3px 0 6px 8px;font-size:0.62rem;color:var(--text-faint);text-align:right;font-weight:500">Valor</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
+        <thead><tr style="border-bottom:0.5px solid var(--line)">${renderThead()}</tr></thead>
+        <tbody>${renderRows()}</tbody>
       </table>
     </div>`;
+
+  pop.addEventListener("click", (e) => {
+    const th = e.target.closest("th[data-sort]");
+    if (!th || !pop.contains(th)) return;
+    e.stopPropagation();
+    const key = th.dataset.sort;
+    sortDir = key === sortKey ? -sortDir : 1;
+    sortKey = key;
+    pop.querySelector("thead tr").innerHTML = renderThead();
+    pop.querySelector("tbody").innerHTML = renderRows();
+  });
+
   return pop;
 }
 
@@ -3801,14 +3908,34 @@ function buildAuditPopover(lineName, monthLabel, rows, total, lineId, monthIdx) 
   popover.dataset.monthIdx = String(monthIdx);
 
   const hasData = rows.length > 0;
+  let sortKey = "code", sortDir = 1;
 
-  const tableRows = rows.map((r) => `
-    <tr>
-      <td class="gap-code">${escapeHtml(r.code)}</td>
-      <td class="gap-name">${escapeHtml(r.name)}</td>
-      <td class="gap-val">${escapeHtml(formatSignedCurrency(r.amount))}</td>
-    </tr>
-  `).join("");
+  function renderRows() {
+    return rows.slice().sort((a, b) => {
+      if (sortKey === "code")   return sortDir * (a.code || "").localeCompare(b.code || "");
+      if (sortKey === "name")   return sortDir * (a.name || "").localeCompare(b.name || "");
+      if (sortKey === "amount") return sortDir * (a.amount - b.amount);
+      return 0;
+    }).map((r) => `
+      <tr>
+        <td class="gap-code">${escapeHtml(r.code)}</td>
+        <td class="gap-name">${escapeHtml(r.name)}</td>
+        <td class="gap-val">${escapeHtml(formatSignedCurrency(r.amount))}</td>
+      </tr>`).join("");
+  }
+
+  function renderThead() {
+    function th(key, cls, label) {
+      const active = sortKey === key;
+      const dir = active ? (sortDir === 1 ? " ↑" : " ↓") : "";
+      return `<th class="${cls}" data-sort="${key}" style="cursor:pointer;user-select:none${active ? ";color:var(--blue)" : ""}">${escapeHtml(label)}${dir}</th>`;
+    }
+    return `
+      ${th("code",   "gap-code", "Conta")}
+      ${th("name",   "gap-name", "Descrição")}
+      ${th("amount", "gap-val",  "Valor")}
+    `;
+  }
 
   popover.innerHTML = `
     <div class="gap-header">
@@ -3819,14 +3946,8 @@ function buildAuditPopover(lineName, monthLabel, rows, total, lineId, monthIdx) 
     ${hasData ? `
     <div class="gap-table-wrap">
       <table class="gap-table">
-        <thead>
-          <tr>
-            <th class="gap-code">Conta</th>
-            <th class="gap-name">Descrição</th>
-            <th class="gap-val">Valor</th>
-          </tr>
-        </thead>
-        <tbody>${tableRows}</tbody>
+        <thead><tr>${renderThead()}</tr></thead>
+        <tbody>${renderRows()}</tbody>
       </table>
     </div>
     <div class="gap-footer">
@@ -3840,6 +3961,19 @@ function buildAuditPopover(lineName, monthLabel, rows, total, lineId, monthIdx) 
     e.stopPropagation();
     closeAuditPopover();
   });
+
+  if (hasData) {
+    popover.addEventListener("click", (e) => {
+      const th = e.target.closest("th[data-sort]");
+      if (!th || !popover.contains(th)) return;
+      e.stopPropagation();
+      const key = th.dataset.sort;
+      sortDir = key === sortKey ? -sortDir : 1;
+      sortKey = key;
+      popover.querySelector("thead tr").innerHTML = renderThead();
+      popover.querySelector("tbody").innerHTML = renderRows();
+    });
+  }
 
   return popover;
 }
@@ -4311,7 +4445,7 @@ async function fetchBudgetLedgerForCcIds(year, ccIds) {
     while (true) {
       const page = await fetchSupabaseRowsSafe(
         "budget_ledger_entries",
-        `organization_id=eq.${organizationId}&reference_year=eq.${year}&reference_month=eq.${month}&cost_center_id=in.(${encodedIds})&id=gt.${lastId}&select=id,account_number,cost_center_id,cost_center_number,amount,reference_month&order=id.asc&limit=${pageSize}`
+        `organization_id=eq.${organizationId}&reference_year=eq.${year}&reference_month=eq.${month}&cost_center_id=in.(${encodedIds})&id=gt.${lastId}&select=id,account_number,cost_center_id,cost_center_number,amount,reference_month,entry_date,history&order=id.asc&limit=${pageSize}`
       );
       rows.push(...page);
       if (page.length < pageSize) break;

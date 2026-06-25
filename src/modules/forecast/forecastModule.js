@@ -1,0 +1,377 @@
+(function attachVectonForecastModule(window) {
+  function createForecastModule(deps) {
+    const {
+      escapeHtml,
+      state,
+      MONTH_LABELS,
+      resolveOrganizationId,
+      fetchSupabaseRowsSafe,
+      upsertSupabaseRows,
+      isAdmin,
+    } = deps;
+
+    // ── local state ──────────────────────────────────────────────────────────
+    let scenarios    = null;   // null = not yet loaded
+    let selectedId   = null;
+    let isCreating   = false;
+
+    const PRESET_COLORS = [
+      "#6366f1", "#8b5cf6", "#ec4899", "#ef4444",
+      "#f97316", "#eab308", "#22c55e", "#14b8a6",
+      "#3b82f6", "#64748b",
+    ];
+    const PRESET_ICONS = ["📊", "🎯", "📈", "🔮", "⚡", "🌿", "🏗️", "💡", "🧭", "🚀"];
+
+    // ── Supabase ─────────────────────────────────────────────────────────────
+    async function loadScenarios(year) {
+      const orgId = await resolveOrganizationId();
+      const rows = await fetchSupabaseRowsSafe(
+        "forecast_scenarios",
+        `organization_id=eq.${orgId}&reference_year=eq.${year}&order=sort_order.asc,created_at.asc&select=id,name,color,icon,reference_year,cutoff_month,created_at`
+      );
+      scenarios = rows;
+      return rows;
+    }
+
+    async function createScenario({ name, color, icon, referenceYear, cutoffMonth }) {
+      const orgId = await resolveOrganizationId();
+      const id = crypto.randomUUID();
+      await upsertSupabaseRows("forecast_scenarios", [{
+        id,
+        organization_id: orgId,
+        name,
+        color,
+        icon,
+        reference_year: referenceYear,
+        cutoff_month:   cutoffMonth,
+      }], ["id"]);
+      return id;
+    }
+
+    async function fetchBudgetMonthRows(year, month) {
+      const orgId  = await resolveOrganizationId();
+      const pgSize = 1000;
+      const rows   = [];
+      let lastId   = "00000000-0000-0000-0000-000000000000";
+      while (true) {
+        const page = await fetchSupabaseRowsSafe(
+          "budget_ledger_entries",
+          `organization_id=eq.${orgId}&reference_year=eq.${year}&reference_month=eq.${month}` +
+          `&id=gt.${lastId}&select=account_number,cost_center_id,cost_center_number,amount,entry_date,history` +
+          `&order=id.asc&limit=${pgSize}`
+        );
+        rows.push(...page);
+        if (page.length < pgSize) break;
+        lastId = page[page.length - 1].id;
+      }
+      return rows;
+    }
+
+    async function fetchScenarioMonthRows(scenarioId, year, month) {
+      const orgId  = await resolveOrganizationId();
+      const pgSize = 1000;
+      const rows   = [];
+      let lastId   = "00000000-0000-0000-0000-000000000000";
+      while (true) {
+        const page = await fetchSupabaseRowsSafe(
+          "forecast_ledger_entries",
+          `organization_id=eq.${orgId}&scenario_id=eq.${scenarioId}&reference_year=eq.${year}&reference_month=eq.${month}` +
+          `&id=gt.${lastId}&select=account_number,cost_center_id,cost_center_number,amount,entry_date,history` +
+          `&order=id.asc&limit=${pgSize}`
+        );
+        rows.push(...page);
+        if (page.length < pgSize) break;
+        lastId = page[page.length - 1].id;
+      }
+      return rows;
+    }
+
+    async function insertForecastRows(orgId, scenarioId, year, month, sourceRows) {
+      if (!sourceRows.length) return;
+      const chunkSize = 500;
+      const rows = sourceRows.map(r => ({
+        id:                  crypto.randomUUID(),
+        organization_id:     orgId,
+        scenario_id:         scenarioId,
+        reference_year:      year,
+        reference_month:     month,
+        account_number:      r.account_number,
+        cost_center_id:      r.cost_center_id   || null,
+        cost_center_number:  r.cost_center_number || null,
+        amount:              r.amount,
+        entry_date:          r.entry_date || null,
+        history:             r.history    || null,
+      }));
+      for (let i = 0; i < rows.length; i += chunkSize) {
+        await upsertSupabaseRows("forecast_ledger_entries", rows.slice(i, i + chunkSize), ["id"]);
+      }
+    }
+
+    async function copyMonthData(orgId, scenarioId, year, month, source) {
+      if (source === "novo") return;
+      const sourceRows = source === "budget"
+        ? await fetchBudgetMonthRows(year, month)
+        : await fetchScenarioMonthRows(source, year, month);
+      await insertForecastRows(orgId, scenarioId, year, month, sourceRows);
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    function renderPlanningView(container) {
+      if (!container) return;
+      if (isCreating) {
+        renderNewForm(container);
+      } else if (selectedId) {
+        const sc = (scenarios || []).find(s => s.id === selectedId);
+        renderDetail(container, sc);
+      } else {
+        renderGrid(container);
+      }
+    }
+
+    function hexToRgba(hex, alpha) {
+      const h = (hex || "#6366f1").replace("#", "");
+      const r = parseInt(h.slice(0, 2), 16);
+      const g = parseInt(h.slice(2, 4), 16);
+      const b = parseInt(h.slice(4, 6), 16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+
+    async function renderGrid(container) {
+      const year = Number(state.currentPeriod?.year || 2026);
+      if (!scenarios) {
+        container.innerHTML = `<div class="reports-layout"><div class="reports-catalog-card"><div class="fc-loading">Carregando cenários…</div></div></div>`;
+        await loadScenarios(year);
+      }
+
+      const cards = (scenarios || []).map(s => {
+        const color = s.color || "#6366f1";
+        return `
+        <button class="reports-report-card fc-scenario-card" type="button"
+          data-scenario-id="${escapeHtml(s.id)}"
+          style="border-top-color:${escapeHtml(color)};--fc-accent:${escapeHtml(color)}">
+          <div class="rrc-top">
+            <span class="rrc-icon-wrap" style="background:${hexToRgba(color, 0.12)};border-color:${hexToRgba(color, 0.25)};color:${escapeHtml(color)}">
+              <span style="font-size:1rem;line-height:1">${escapeHtml(s.icon || "📊")}</span>
+            </span>
+          </div>
+          <strong>${escapeHtml(s.name)}</strong>
+          <span class="rrc-subtitle">Corte: ${escapeHtml(MONTH_LABELS[(s.cutoff_month || 1) - 1])} · ${s.reference_year}</span>
+        </button>`;
+      }).join("");
+
+      container.innerHTML = `
+        <div class="reports-layout">
+          <div class="reports-catalog-card">
+            <div class="reports-catalog-header">
+              <h2 class="reports-catalog-title">Repositório de Cenários</h2>
+              <button class="fc-new-btn" type="button" id="fc-new-btn">+ Novo cenário</button>
+            </div>
+            <div class="reports-card-grid">
+              ${cards || `<p class="fc-empty">Nenhum cenário ainda. Clique em <strong>+ Novo cenário</strong> para começar.</p>`}
+            </div>
+          </div>
+        </div>`;
+
+      container.querySelector("#fc-new-btn")?.addEventListener("click", () => {
+        isCreating = true;
+        renderNewForm(container);
+      });
+
+      container.querySelector(".fc-card-grid")?.addEventListener("click", e => {
+        const card = e.target.closest("[data-scenario-id]");
+        if (!card) return;
+        selectedId = card.dataset.scenarioId;
+        renderDetail(container, (scenarios || []).find(s => s.id === selectedId));
+      });
+    }
+
+    function renderNewForm(container) {
+      const year = Number(state.currentPeriod?.year || 2026);
+      const existing = scenarios || [];
+
+      function sourceOptions() {
+        return [
+          `<option value="budget">Orçamento</option>`,
+          `<option value="novo">NOVO (zerado)</option>`,
+          ...existing.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)}</option>`),
+        ].join("");
+      }
+
+      const monthCols = MONTH_LABELS.map((lbl, i) => `
+        <div class="fc-mcol" data-month="${i + 1}">
+          <span class="fc-mlabel">${escapeHtml(lbl)}</span>
+          <select class="fc-msrc" data-month="${i + 1}">${sourceOptions()}</select>
+        </div>`).join("");
+
+      container.innerHTML = `
+        <div class="fc-wrap fc-form-wrap">
+          <div class="fc-form-header">
+            <button class="fc-back-btn" id="fc-back" type="button">← Cenários</button>
+            <h2 class="fc-form-title">Novo cenário · ${year}</h2>
+          </div>
+          <form id="fc-form" class="fc-form" autocomplete="off">
+
+            <div class="fc-field">
+              <label class="fc-flabel">Nome</label>
+              <input id="fc-name" class="fc-input" type="text" required maxlength="80" placeholder="Ex: Revisão Julho">
+            </div>
+
+            <div class="fc-field">
+              <label class="fc-flabel">Cor</label>
+              <div class="fc-swatches" id="fc-colors">
+                ${PRESET_COLORS.map((c, i) => `<button type="button" class="fc-swatch${i === 0 ? " fc-active" : ""}" data-color="${c}" style="background:${c}"></button>`).join("")}
+              </div>
+              <input id="fc-color" type="hidden" value="${PRESET_COLORS[0]}">
+            </div>
+
+            <div class="fc-field">
+              <label class="fc-flabel">Ícone</label>
+              <div class="fc-swatches" id="fc-icons">
+                ${PRESET_ICONS.map((ic, i) => `<button type="button" class="fc-icon-btn${i === 0 ? " fc-active" : ""}" data-icon="${ic}">${ic}</button>`).join("")}
+              </div>
+              <input id="fc-icon" type="hidden" value="${PRESET_ICONS[0]}">
+            </div>
+
+            <div class="fc-field">
+              <label class="fc-flabel">Realizado até</label>
+              <select id="fc-cutoff" class="fc-input" style="max-width:160px">
+                ${MONTH_LABELS.map((l, i) => `<option value="${i + 1}"${i === 4 ? " selected" : ""}>${escapeHtml(l)}</option>`).join("")}
+              </select>
+              <span class="fc-fhint">Meses até este serão puxados do realizado no relatório.</span>
+            </div>
+
+            <div class="fc-field">
+              <label class="fc-flabel">Fonte por mês replanejado</label>
+              <span class="fc-fhint">Meses com cadeado usam o realizado — defina a fonte apenas dos meses após o corte.</span>
+              <div class="fc-months-row" id="fc-months-row">${monthCols}</div>
+            </div>
+
+            <div class="fc-form-actions">
+              <button type="button" class="fc-btn-cancel" id="fc-cancel">Cancelar</button>
+              <button type="submit" class="fc-btn-save" id="fc-save">Criar cenário</button>
+            </div>
+          </form>
+        </div>`;
+
+      function updateCutoff() {
+        const cutoff = Number(container.querySelector("#fc-cutoff").value);
+        container.querySelectorAll(".fc-mcol").forEach(col => {
+          const m = Number(col.dataset.month);
+          const locked = m <= cutoff;
+          col.classList.toggle("fc-mlocked", locked);
+          col.querySelector("select").disabled = locked;
+        });
+      }
+      updateCutoff();
+
+      container.querySelector("#fc-cutoff").addEventListener("change", updateCutoff);
+
+      container.querySelector("#fc-colors").addEventListener("click", e => {
+        const btn = e.target.closest("[data-color]");
+        if (!btn) return;
+        container.querySelectorAll(".fc-swatch").forEach(s => s.classList.remove("fc-active"));
+        btn.classList.add("fc-active");
+        container.querySelector("#fc-color").value = btn.dataset.color;
+      });
+
+      container.querySelector("#fc-icons").addEventListener("click", e => {
+        const btn = e.target.closest("[data-icon]");
+        if (!btn) return;
+        container.querySelectorAll(".fc-icon-btn").forEach(s => s.classList.remove("fc-active"));
+        btn.classList.add("fc-active");
+        container.querySelector("#fc-icon").value = btn.dataset.icon;
+      });
+
+      const goBack = () => { isCreating = false; renderGrid(container); };
+      container.querySelector("#fc-back").addEventListener("click", goBack);
+      container.querySelector("#fc-cancel").addEventListener("click", goBack);
+
+      container.querySelector("#fc-form").addEventListener("submit", async e => {
+        e.preventDefault();
+        const name       = container.querySelector("#fc-name").value.trim();
+        const color      = container.querySelector("#fc-color").value;
+        const icon       = container.querySelector("#fc-icon").value;
+        const cutoff     = Number(container.querySelector("#fc-cutoff").value);
+        const saveBtn    = container.querySelector("#fc-save");
+
+        const monthSources = {};
+        container.querySelectorAll(".fc-msrc").forEach(sel => {
+          monthSources[Number(sel.dataset.month)] = sel.value;
+        });
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Criando…";
+
+        try {
+          const orgId      = await resolveOrganizationId();
+          const scenarioId = await createScenario({ name, color, icon, referenceYear: year, cutoffMonth: cutoff });
+
+          for (let m = cutoff + 1; m <= 12; m++) {
+            const src = monthSources[m] || "novo";
+            saveBtn.textContent = `Copiando ${MONTH_LABELS[m - 1]}…`;
+            await copyMonthData(orgId, scenarioId, year, m, src);
+          }
+
+          scenarios  = null;
+          isCreating = false;
+          await loadScenarios(year);
+          renderGrid(container);
+        } catch (err) {
+          console.error("Erro ao criar cenário:", err);
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Criar cenário";
+        }
+      });
+    }
+
+    function renderDetail(container, scenario) {
+      if (!scenario) { selectedId = null; renderGrid(container); return; }
+
+      container.innerHTML = `
+        <div class="fc-wrap fc-detail-wrap">
+          <div class="fc-detail-header">
+            <button class="fc-back-btn" id="fc-detail-back" type="button">← Cenários</button>
+            <div class="fc-detail-title-row">
+              <span class="fc-detail-icon" style="background:${escapeHtml(scenario.color || "#6366f1")}">${escapeHtml(scenario.icon || "📊")}</span>
+              <div>
+                <h2 class="fc-detail-name">${escapeHtml(scenario.name)}</h2>
+                <span class="fc-detail-meta">Realizado até ${escapeHtml(MONTH_LABELS[(scenario.cutoff_month || 1) - 1])} · ${scenario.reference_year}</span>
+              </div>
+            </div>
+          </div>
+          <div class="fc-report-grid">
+            <button class="fc-rcard" type="button" data-fc-report="dreSoc">
+              <span class="fc-rcard-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-cost"></use></svg></span>
+              <strong class="fc-rcard-label">DRE Societário</strong>
+              <span class="fc-rcard-sub">${escapeHtml(scenario.name)}</span>
+            </button>
+            <div class="fc-rcard fc-rcard--soon">
+              <span class="fc-rcard-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-reports"></use></svg></span>
+              <strong class="fc-rcard-label">Balanço Patrimonial</strong>
+              <span class="fc-rcard-sub">Em breve</span>
+            </div>
+            <div class="fc-rcard fc-rcard--soon">
+              <span class="fc-rcard-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-trend-up"></use></svg></span>
+              <strong class="fc-rcard-label">Fluxo de Caixa</strong>
+              <span class="fc-rcard-sub">Em breve</span>
+            </div>
+          </div>
+        </div>`;
+
+      container.querySelector("#fc-detail-back").addEventListener("click", () => {
+        selectedId = null;
+        renderGrid(container);
+      });
+    }
+
+    function resetState() {
+      selectedId  = null;
+      isCreating  = false;
+      scenarios   = null;
+    }
+
+    return { renderPlanningView, resetPlanningState: resetState };
+  }
+
+  window.VECTON_FORECAST = { createForecastModule };
+})(window);

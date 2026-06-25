@@ -1,68 +1,120 @@
-# VectonPlan
+﻿# VectonPlan
 
 SPA de planejamento financeiro da **Marcher Brasil**. Roda no browser (Vanilla JS, sem framework/bundler) sobre **Supabase** (PostgreSQL + Auth + RLS, multitenancy via `organization_id`).
 
-> Caminho local: `C:\Users\rguimaraes\OneDrive - MARCHER BRASIL AGROINDUSTRIAL SA\Área de Trabalho\VectonPlan`
+> Caminho local: `C:\Users\rguimaraes\OneDrive - MARCHER BRASIL AGROINDUSTRIAL SA\Ãrea de Trabalho\VectonPlan`  
+> ProduÃ§Ã£o: **https://vecton.marcher.com.br** â€” mudanÃ§as de frontend exigem deploy dos arquivos + bump do `?v=` no `index.html`.
 
 ## Stack & arquivos-chave
-- `index.html` — shell único da SPA; carrega ~25 scripts em ordem (a ordem importa).
-- `app.js` — orquestrador (~5.500 linhas): instancia os módulos e contém lógica de DRE, OPEX, Headcount, Reports e Dashboard, além dos fetches Supabase.
-- `styles.css` — estilos globais (tema dark, tokens em `:root`).
-- `supabase-config.js` — URL + anonKey (org "Marcher Brasil").
-- `src/core/` — `constants.js`, `utils.js` (ex.: `normalizeCode` = só dígitos), `storage.js`.
-- `src/modules/` — IIFEs com namespace `window.VECTON_*`; cada `createXxxModule({deps})` recebe dependências do `app.js`.
-  - `auth/authSession.js`, `navigation/navigationModule.js`, `ui/*`, `actuals/`, `budget/`, `headcount/`, `reports/` (DRE Soc/Ger/DFs, OPEX, Headcount), `dashboard/`, `params/managementsModule.js`, `users/usersModule.js`.
-- `supabase/NNN_*.sql` — migrations numeradas (rodar no SQL Editor).
 
-## Modelo de acesso (RBAC) — **fail-closed**
-Papéis (`user_profiles.access_role`): `super_admin`, `admin`, `manager` (Gestor), `analyst` (Analista).
-- **admin/super_admin**: enxergam tudo (`getAllowedCcNumbers()`/`resolveManagementFilter` retornam "sem restrição").
-- **Gestor/Analista**: SEMPRE travados na própria gestão. Gestão sem CCs → relatório **vazio** (nunca "todas"). Sentinela `"__no_cc__"` quando o perfil não tem gestão.
-- **Dashboard**: exibição primária é **consolidada (empresa)** mesmo para Gestor; a restrição por gestão vale só no **drill-down** (clique → relatório, popover de "sem acesso" se for outra área).
-- Catálogo de relatórios: Gestor vê tudo; Analista não vê DRE consolidado (`canSeeReport`/`isConsolidatedReport`). `extra_report_ids` é concessão adicional.
-- Helpers em `app.js`: `getAllowedCcNumbers()`, `canSeeReport()`, `canSeeAccount()`, `isAccessRestricted()`, `resolveManagementFilter()` (compartilhado por OPEX Real/Budget e Headcount).
-- Criar usuário de teste exige **DUAS** linhas: `organization_users` (membership — `is_org_member` consulta esta) **e** `user_profiles` (perfil/acesso).
+- `index.html` â€” shell Ãºnico da SPA; carrega ~25 scripts em ordem (a ordem importa).
+- `app.js` â€” orquestrador: instancia os mÃ³dulos e contÃ©m lÃ³gica de DRE, OPEX, Headcount, Reports e Dashboard, alÃ©m dos fetches Supabase e todos os helpers de RBAC.
+- `styles.css` â€” estilos globais (tema dark, tokens em `:root`).
+- `supabase-config.js` â€” URL + anonKey (org "Marcher Brasil").
+- `src/core/` â€” `constants.js`, `utils.js` (ex.: `normalizeCode` = sÃ³ dÃ­gitos), `storage.js`.
+- `src/modules/` â€” IIFEs com namespace `window.VECTON_*`; cada `createXxxModule({deps})` recebe dependÃªncias do `app.js`.
+  - `auth/authSession.js`, `navigation/navigationModule.js`, `ui/*`, `actuals/`, `budget/`, `headcount/`, `reports/` (DRE Soc/Ger, OPEX, Headcount), `dashboard/` (dashboardModule, dashboardCards, dashboardVisuals, marketTicker), `params/managementsModule.js`, `users/usersModule.js`.
+- `supabase/NNN_*.sql` â€” migrations numeradas (rodar no SQL Editor).
+- `supabase/functions/invite-user/index.ts` â€” Edge Function de convite (service_role).
 
-## Performance (padrões obrigatórios)
-- **Paginação por keyset** (`id=gt.${lastId}&order=id.asc`) em vez de offset profundo, sob filtro `(org, ano, mês)`. Exige índice terminando em `id`.
-- **Busca por gestão no servidor** para perfis restritos (`fetchActuals/BudgetLedgerForManagementYear`) em vez de baixar o ano inteiro e filtrar no cliente. Mesmo padrão no Headcount (`hcCostSource`).
-- **Agregação server-side** no donut do dashboard: RPC `dash_opex_by_management` (migration 024) devolve ~10 linhas em vez de centenas de milhares.
-- **DIRETRIZ**: toda otimização do REALIZADO deve estar 100% espelhada no BUDGET/PLANEJADO.
+## Modelo de acesso (RBAC) â€” **fail-closed**
 
-### Migrations recentes
-- `022_budget_ledger_drilldown_index.sql` — índice `(org, ano, mês, id)` em `budget_ledger_entries`.
-- `023_ledger_drilldown_indexes.sql` — mesmos índices em `actuals_ledger_entries` e `headcount_entries`.
-- `024_dash_opex_by_management.sql` — função RPC de agregação do OPEX por gestão (SECURITY DEFINER, gated por `is_org_member`).
+PapÃ©is (`user_profiles.access_role`): `super_admin`, `admin`, `manager` (Gestor), `analyst` (Analista).
 
-## Melhorias de UX desta sessão
-- **Login → app**: ao logar, entra no app já com **overlay de blur + spinner** (`showAppLoading`/`hideAppLoading`) até o BD responder — sem flash do perfil anterior.
-- **Início**: sempre no **Dashboard**, no **último mês com dados** (batch de realizado aplicado mais recente).
-- **Campo de senha**: olhinho único de mostrar/ocultar (fica azul quando visível).
-- **Parâmetros → Gestões**: drilldown expansível dos CCs de cada gestão (com nota de que a vinculação é definida no cadastro de Centros de Custo — só leitura ali).
-- **Relatórios**: números tabulares, negativos em vermelho-suave, skeleton de loading, cards coloridos, edição inline de label/subtítulo (admin), reordenar.
+### Regras por papel
+- **admin/super_admin**: enxergam tudo, sem restriÃ§Ã£o de CC ou gestÃ£o.
+- **Gestor**: vÃª catÃ¡logo completo (incluindo DRE consolidado). Dados travados na prÃ³pria gestÃ£o + gestÃµes extras + CCs avulsos.
+- **Analista**: nÃ£o vÃª DRE consolidado (`isConsolidatedReport`) nem Dashboard. OPEX e Headcount filtrados pela gestÃ£o/CCs permitidos.
+- **Dashboard**: exibiÃ§Ã£o primÃ¡ria **sempre consolidada** (empresa toda), mesmo para Gestor. RestriÃ§Ã£o vale sÃ³ no drill-down (clique â†’ relatÃ³rio; popover "sem acesso" para outras Ã¡reas).
 
-## Status dos bugs de acesso (lista do cliente)
+### Tipos de acesso extra (colunas em `user_profiles`)
+| Campo | Tipo | Efeito |
+|---|---|---|
+| `management` | text | GestÃ£o primÃ¡ria do usuÃ¡rio |
+| `extra_managements` | text[] | GestÃµes adicionais com acesso **pleno** |
+| `extra_cc_ids` | uuid[] | CCs avulsos com acesso **parcial** (nÃ£o a gestÃ£o inteira) |
+| `extra_report_ids` | uuid[] | RelatÃ³rios liberados individualmente |
+| `extra_account_codes` | text[] | Contas contÃ¡beis liberadas individualmente |
+
+### Helpers em `app.js`
+- `getUserManagement()` / `getExtraManagements()` / `getExtraCcIds()`
+- `getAllowedManagements()` â€” retorna `[primary, ...extras]` para restritos; `null` para admin.
+- `getPartialManagements()` â€” `Map<mgmt, ccId[]>` das gestÃµes acessÃ­veis sÃ³ via `extra_cc_ids` (nÃ£o a gestÃ£o inteira).
+- `getAllowedCcNumbers()` â€” `Set<string>` com nÃºmeros de CC permitidos (mapeia UUIDs via `state.costCenters`).
+- `resolveManagementFilter()` â€” filtro ativo de gestÃ£o para OPEX/Headcount; sentinela `"__no_cc__"` quando sem gestÃ£o.
+- `buildOpexCostCenterFilter()` / `buildOpexCcIdsFilter()` / `buildEffectiveOpexFilter()`
+- `canSeeReport()` / `canSeeAccount()` / `isAccessRestricted()`
+
+### Acesso parcial (management=null + extra_cc_ids)
+Perfil sem gestÃ£o primÃ¡ria mas com CCs avulsos liberados:
+- `getAllowedManagements()` â†’ `[]` (restrito, mas sem gestÃ£o plena).
+- `getPartialManagements()` â†’ `Map { "NomeGestÃ£o" => [uuid-cc] }`.
+- OPEX dropdown: exibe a gestÃ£o com sufixo "Â· parcial", dados filtrados sÃ³ pelos CCs autorizados.
+- Dashboard HC: idem â€” dropdown mostra "GestÃ£o Â· parcial"; nÃºmero e drilldown refletem apenas os CCs do usuÃ¡rio.
+- `resolveManagementFilter` retorna a gestÃ£o parcial como opÃ§Ã£o desbloqueada.
+
+### Gotchas recorrentes
+- Criar usuÃ¡rio de teste exige **DUAS** linhas: `organization_users` (membership â€” `is_org_member` consulta esta) **e** `user_profiles` (perfil/acesso).
+- `hidden` HTML Ã© sobrescrito por `display:grid` em `.menu-stack`. Sempre usar `el.style.display = "none"` para esconder via JS.
+
+## Performance (padrÃµes obrigatÃ³rios)
+
+- **PaginaÃ§Ã£o por keyset** (`id=gt.${lastId}&order=id.asc`) sob Ã­ndice `(org, ano, mÃªs, id)`.
+- **Busca por gestÃ£o no servidor** para perfis restritos (`fetchActuals/BudgetLedgerForManagementYear`, `hcCostSource`).
+- **AgregaÃ§Ã£o server-side** no donut do dashboard: RPC `dash_opex_by_management` (migration 024).
+- **DIRETRIZ**: toda otimizaÃ§Ã£o no REALIZADO deve estar 100% espelhada no BUDGET/PLANEJADO.
+
+## Migrations (histÃ³rico recente)
+
+| Migration | ConteÃºdo |
+|---|---|
+| 020 | Colunas `extra_*` em `user_profiles` |
+| 022 | Ãndice `(org, ano, mÃªs, id)` em `budget_ledger_entries` |
+| 023 | Mesmos Ã­ndices em `actuals_ledger_entries` e `headcount_entries` |
+| 024 | RPC `dash_opex_by_management` â€” SECURITY DEFINER, agrega OPEX por gestÃ£o no servidor |
+| 025 | Tabela `custom_reports` (id, org_id, created_by, label, config jsonb) â€” RLS: membros leem; sÃ³ admin escreve |
+
+## Report Builder (`src/modules/reports/reportsBuilderModule.js`)
+
+- MÃ³dulo IIFE (`window.VECTON_REPORTS_BUILDER`) integrado ao app.js como `reportsBuilderModule`.
+- Admin vÃª botÃ£o "Novo relatÃ³rio" no catÃ¡logo â†’ builder com drag de colunas, filtros e prÃ©-visualizaÃ§Ã£o.
+- RelatÃ³rios salvos em `custom_reports` (Supabase); visÃ­veis a todos os membros da org.
+- Dados: `actuals_ledger_entries` via cache existente (`reportsLedgerCache`). RBAC via `getAllowedCcNumbers()`.
+- Campos disponÃ­veis: `reference_year`, `reference_month`, `account_number`, `cost_center_number`, `management` (derivado client-side), `amount`, `load_type`, `branch_code`.
+
+## Cache-busting
+
+`index.html` usa `?v=YYYYMMDD[letra]` em todos os `<script src>` e `<link>` locais. **A cada deploy**: find & replace da versÃ£o antiga pela nova. VersÃ£o atual: `20260624n`.
+
+> F5 normal nÃ£o invalida cache HTTP (max-age=600 no GitHub Pages). Ctrl+Shift+R limpa HTTP mas nÃ£o localStorage. Aba anÃ´nima sempre pega versÃ£o nova.
+
+## Convite de usuÃ¡rios
+
+- Modal "Convidar usuÃ¡rio" (ParÃ¢metros â†’ UsuÃ¡rios) â†’ Edge Function `invite-user` (service_role): cria auth user via `inviteUserByEmail` + `organization_users` + `user_profiles`. SÃ³ admin/super_admin; sÃ³ super_admin cria admin.
+- Deploy da funÃ§Ã£o: `supabase functions deploy invite-user --no-verify-jwt`.
+- **Definir senha**: ao clicar no link do email, `handleInviteRecoveryFlow` (authSession.js) detecta tokens no hash, exibe `#set-password-form`, faz `PUT /auth/v1/user`. Tokens limpos do hash com `history.replaceState`.
+- SMTP: Office365 com `no-reply@marcher.com.br`, configurado no painel Supabase.
+- Templates de email: HTML brandado, compatÃ­veis com Outlook â€” em `supabase/email-templates/`.
+
+## Status dos bugs de acesso resolvidos
+
 | # | Item | Status |
 |---|---|---|
-| 1 | Drilldown DRE Societário (Real+Budget) por CC | ✅ |
-| 2 | Drilldown DRE Gerencial (Real+Budget) por CC | ✅ |
-| 3 | OPEX (Real+Planejado) travado na gestão + drilldown | ✅ |
-| 5 | Headcount (Real+Planejado) drilldown por CC | ✅ |
-| 6 | Dashboard headcount: primário consolidado, drill só da gestão | ✅ |
-| 7 | Dashboard donut: drill respeita gestão (popover sem acesso) | ✅ |
-| 8 | Menu Parâmetros só para super_admin/admin | ✅ — `navigationModule` usa `style.display` (não `hidden`, que era sobrescrito por `.menu-stack{display:grid}`). Também esconde Dashboard (analista) e Usuários/Perfis |
+| 1 | Drilldown DRE SocietÃ¡rio (Real+Budget) por CC | âœ… |
+| 2 | Drilldown DRE Gerencial (Real+Budget) por CC | âœ… |
+| 3 | OPEX (Real+Planejado) travado na gestÃ£o + drilldown | âœ… |
+| 5 | Headcount (Real+Planejado) drilldown por CC | âœ… |
+| 6 | Dashboard headcount: primÃ¡rio consolidado, drill sÃ³ da gestÃ£o | âœ… |
+| 7 | Dashboard donut OPEX: drill respeita gestÃ£o principal + complementares + parciais | âœ… |
+| 8 | Menu ParÃ¢metros sÃ³ para super_admin/admin | âœ… |
+| 9 | OPEX dropdown: exibe sÃ³ gestÃµes permitidas + parciais (sem "Marcher" para restritos) | âœ… |
+| 10 | Ticker Soja/Milho: variaÃ§Ã£o % via localStorage (prev/today por data) | âœ… |
 
-> ⚠️ **Gotcha recorrente:** o atributo HTML `hidden` é sobrescrito por qualquer regra CSS de `display` na classe do elemento (mesma especificidade, autor > user-agent). Para esconder via JS, use `el.style.display = "none"`, não `el.hidden = true`.
+## PendÃªncias
 
-## Convite de usuários (Edge Function + definir senha)
-- Botão "Convidar usuário" (Parâmetros → Usuários) abre modal → chama a Edge Function `supabase/functions/invite-user` (service_role: cria auth user via `inviteUserByEmail` + `organization_users` + `user_profiles`). Só admin/super_admin; só super_admin cria admin.
-- Deploy: `supabase functions deploy invite-user --no-verify-jwt` (CORS: validamos o JWT/role manualmente dentro).
-- Frontend chama via `callEdgeFunction()` (app.js → `/functions/v1/<nome>` com token do usuário).
-- **Definir senha**: ao clicar no link do email, o app detecta os tokens no hash (`handleInviteRecoveryFlow` em authSession), mostra o form `#set-password-form` e faz `PUT /auth/v1/user`. Requer Site URL/Redirect URLs configurados (`http://vecton.marcher.com.br` + `/**`).
-- App publicado em **http://vecton.marcher.com.br** → mudanças de frontend exigem **deploy** dos arquivos.
-- Lista de usuários agora tem **snapshot** (não mostra "Carregando" toda vez; atualiza em background).
+- Validar visibilidade de "ParÃ¢metros" para Gestor RH (`mr.guima@gmail.com`) em prod.
+- Testes com perfil **Analista** (2026-06-24): validar acesso parcial `management=null` + `extra_cc_ids`.
 
 ## Como continuar
-- Memória detalhada da sessão: `~/.claude/projects/C--Claude/memory/project_vecton_plan.md`.
-- Usuário de teste atual: `mr.guima@gmail.com` (Gestor de "Recursos Humanos").
-- Próximo: validar **#8** com o Gestor RH (confirmar que Parâmetros não aparece) e seguir a lista.
+
+MemÃ³ria detalhada: `~/.claude/projects/C--Claude/memory/project_vecton_plan.md`.

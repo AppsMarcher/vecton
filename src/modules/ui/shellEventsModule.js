@@ -40,7 +40,10 @@
       setSelectedActualsLoadType,
       loadAndRenderUsers,
       loadAndRenderManagements,
-      bindManagementsAddButton
+      bindManagementsAddButton,
+      renderPlanningView,
+      resetPlanningState,
+      getPlanningContainer,
     } = deps;
 
     function bindShellEvents() {
@@ -67,10 +70,16 @@
           if (button.dataset.view === "budgetLoad") {
             setSelectedBudgetLoadType(null);
           }
+          if (button.dataset.view !== "planning") {
+            resetPlanningState();
+          }
           setActiveView(button.dataset.view);
           renderNavigation();
           if (getActiveView() === "reports") {
             renderReportsView();
+          }
+          if (getActiveView() === "planning") {
+            renderPlanningView(getPlanningContainer());
           }
         });
       });
