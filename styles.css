@@ -2075,6 +2075,27 @@ textarea {
 
 body.can-edit-reports .reports-report-card .rrc-edit-btn { display: inline-flex; }
 
+.fc-card-menu-btn {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: color 120ms, background 120ms;
+  z-index: 2;
+}
+.fc-card-menu-btn svg { width: 13px; height: 13px; pointer-events: none; }
+.fc-card-menu-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.12); }
+body.can-edit-reports .fc-scenario-card .fc-card-menu-btn { display: inline-flex; }
+
 /* Botão Reorganizar */
 #reports-reorder-btn {
   display: none;
