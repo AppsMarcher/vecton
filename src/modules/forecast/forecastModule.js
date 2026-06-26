@@ -57,6 +57,25 @@
       return id;
     }
 
+    async function fetchActualsMonthRows(year, month) {
+      const orgId  = await resolveOrganizationId();
+      const pgSize = 1000;
+      const rows   = [];
+      let lastId   = "00000000-0000-0000-0000-000000000000";
+      while (true) {
+        const page = await fetchSupabaseRowsSafe(
+          "actuals_ledger_entries",
+          `organization_id=eq.${orgId}&reference_year=eq.${year}&reference_month=eq.${month}` +
+          `&id=gt.${lastId}&select=account_number,cost_center_id,cost_center_number,amount,entry_date,history` +
+          `&order=id.asc&limit=${pgSize}`
+        );
+        rows.push(...page);
+        if (page.length < pgSize) break;
+        lastId = page[page.length - 1].id;
+      }
+      return rows;
+    }
+
     async function fetchBudgetMonthRows(year, month) {
       const orgId  = await resolveOrganizationId();
       const pgSize = 1000;
@@ -117,10 +136,10 @@
     }
 
     async function copyMonthData(orgId, scenarioId, year, month, source) {
-      if (source === "novo") return;
-      const sourceRows = source === "budget"
-        ? await fetchBudgetMonthRows(year, month)
-        : await fetchScenarioMonthRows(source, year, month);
+      let sourceRows;
+      if (source === "real")   sourceRows = await fetchActualsMonthRows(year, month);
+      else if (source === "budget") sourceRows = await fetchBudgetMonthRows(year, month);
+      else                     sourceRows = await fetchScenarioMonthRows(source, year, month);
       await insertForecastRows(orgId, scenarioId, year, month, sourceRows);
     }
 
@@ -211,8 +230,8 @@
 
       function sourceOptions() {
         return [
+          `<option value="real">Real</option>`,
           `<option value="budget">Orçamento</option>`,
-          `<option value="novo">NOVO (zerado)</option>`,
           ...existing.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)}</option>`),
         ].join("");
       }
@@ -253,16 +272,7 @@
             </div>
 
             <div class="fc-field">
-              <label class="fc-flabel">Realizado até</label>
-              <select id="fc-cutoff" class="fc-input" style="max-width:160px">
-                ${MONTH_LABELS.map((l, i) => `<option value="${i + 1}"${i === 4 ? " selected" : ""}>${escapeHtml(l)}</option>`).join("")}
-              </select>
-              <span class="fc-fhint">Meses até este serão puxados do realizado no relatório.</span>
-            </div>
-
-            <div class="fc-field">
-              <label class="fc-flabel">Fonte por mês replanejado</label>
-              <span class="fc-fhint">Meses com cadeado usam o realizado — defina a fonte apenas dos meses após o corte.</span>
+              <label class="fc-flabel">Fonte por mês</label>
               <div class="fc-months-row" id="fc-months-row">${monthCols}</div>
             </div>
 
@@ -272,19 +282,6 @@
             </div>
           </form>
         </div>`;
-
-      function updateCutoff() {
-        const cutoff = Number(container.querySelector("#fc-cutoff").value);
-        container.querySelectorAll(".fc-mcol").forEach(col => {
-          const m = Number(col.dataset.month);
-          const locked = m <= cutoff;
-          col.classList.toggle("fc-mlocked", locked);
-          col.querySelector("select").disabled = locked;
-        });
-      }
-      updateCutoff();
-
-      container.querySelector("#fc-cutoff").addEventListener("change", updateCutoff);
 
       container.querySelector("#fc-colors").addEventListener("click", e => {
         const btn = e.target.closest("[data-color]");
@@ -311,13 +308,17 @@
         const name       = container.querySelector("#fc-name").value.trim();
         const color      = container.querySelector("#fc-color").value;
         const icon       = container.querySelector("#fc-icon").value;
-        const cutoff     = Number(container.querySelector("#fc-cutoff").value);
         const saveBtn    = container.querySelector("#fc-save");
 
         const monthSources = {};
         container.querySelectorAll(".fc-msrc").forEach(sel => {
           monthSources[Number(sel.dataset.month)] = sel.value;
         });
+
+        let cutoff = 0;
+        for (let m = 1; m <= 12; m++) {
+          if (monthSources[m] === "real") cutoff = m; else break;
+        }
 
         saveBtn.disabled = true;
         saveBtn.textContent = "Criando…";
@@ -326,8 +327,8 @@
           const orgId      = await resolveOrganizationId();
           const scenarioId = await createScenario({ name, color, icon, referenceYear: year, cutoffMonth: cutoff });
 
-          for (let m = cutoff + 1; m <= 12; m++) {
-            const src = monthSources[m] || "novo";
+          for (let m = 1; m <= 12; m++) {
+            const src = monthSources[m] || "real";
             saveBtn.textContent = `Copiando ${MONTH_LABELS[m - 1]}…`;
             await copyMonthData(orgId, scenarioId, year, m, src);
           }
