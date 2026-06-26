@@ -423,7 +423,7 @@
         finish(null, new Error(`CEPEA timeout (${item.label})`));
       }, 6000);
 
-      frame.addEventListener("load", onLoad, { once: false });
+      frame.addEventListener("load", onLoad, { once: true });
       frame.srcdoc = buildCepeaSrcdoc(item.indicatorId);
     });
   }
