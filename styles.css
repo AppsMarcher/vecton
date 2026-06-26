@@ -3082,8 +3082,9 @@ thead .col-frozen-3 {
 }
 
 .actuals-error-item {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   border-color: rgba(239, 68, 68, 0.14);
   background: rgba(239, 68, 68, 0.06);
 }
@@ -3187,9 +3188,10 @@ thead .col-frozen-3 {
 }
 
 .actuals-col-action {
-  width: 28px;
-  min-width: 28px;
+  width: 68px;
+  min-width: 68px;
   padding-left: 2px;
+  white-space: nowrap;
 }
 
 .actuals-field-date {
