@@ -67,6 +67,8 @@
     let selectedLoadType = null;
     const loadingBatchIds = new Set();
     const ROWS_PER_PAGE = 200;
+    let sortKey = "rowNumber";
+    let sortDir = 1;
 
     function getSelectedBatchId() {
       return selectedBatchId;
@@ -264,6 +266,16 @@
 
       document.querySelector("#actuals-rows-search")?.addEventListener("input", (event) => {
         rowsFilter = event.target.value;
+        rowsPage = 1;
+        renderRowsTable();
+      });
+
+      document.querySelector("#actuals-rows-body")?.closest("table")?.querySelector("thead")?.addEventListener("click", (event) => {
+        const th = event.target.closest("th[data-sort]");
+        if (!th) return;
+        const key = th.dataset.sort;
+        sortDir = key === sortKey ? -sortDir : 1;
+        sortKey = key;
         rowsPage = 1;
         renderRowsTable();
       });
@@ -1146,9 +1158,32 @@
       }
     }
 
+    function renderActualsThead() {
+      function th(key, cls, label) {
+        const active = sortKey === key;
+        const arrow = active ? (sortDir === 1 ? " ↑" : " ↓") : "";
+        return `<th class="${cls}" data-sort="${key}" style="cursor:pointer;user-select:none${active ? ";color:var(--blue)" : ""}">${label}${arrow}</th>`;
+      }
+      return `
+        ${th("rowNumber", "actuals-col-row", "#")}
+        ${th("entryDate", "actuals-col-date", "Data")}
+        ${th("branchCode", "actuals-col-branch", "Emp")}
+        ${th("accountNumber", "actuals-col-account", "Conta")}
+        ${th("costCenterNumber", "actuals-col-cc", "CC")}
+        ${th("history", "actuals-col-history", "Historico")}
+        ${th("lotCode", "actuals-col-lot", "Lote")}
+        ${th("amount", "actuals-col-amount", "Valor")}
+        ${th("validationStatus", "actuals-col-status", "Status")}
+        <th class="actuals-col-action">Acao</th>
+      `;
+    }
+
     function renderRowsTable() {
       const tbody = document.querySelector("#actuals-rows-body");
       if (!tbody) return;
+
+      const theadRow = tbody.closest("table")?.querySelector("thead tr");
+      if (theadRow) theadRow.innerHTML = renderActualsThead();
 
       tbody.innerHTML = "";
       const batch = getSelectedActualsBatch();
@@ -1158,7 +1193,7 @@
         return;
       }
 
-      const allRows = getSelectedActualsRows().slice().sort((a, b) => a.rowNumber - b.rowNumber);
+      const allRows = getSelectedActualsRows();
       const filter = rowsFilter.toLowerCase().trim();
       const filtered = filter
         ? allRows.filter((row) =>
@@ -1185,10 +1220,16 @@
         return;
       }
 
-      const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
+      const sorted = filtered.slice().sort((a, b) => {
+        if (sortKey === "rowNumber") return sortDir * (a.rowNumber - b.rowNumber);
+        if (sortKey === "amount") return sortDir * ((a.amount ?? 0) - (b.amount ?? 0));
+        return sortDir * String(a[sortKey] || "").toLowerCase().localeCompare(String(b[sortKey] || "").toLowerCase());
+      });
+
+      const totalPages = Math.ceil(sorted.length / ROWS_PER_PAGE);
       rowsPage = Math.min(Math.max(1, rowsPage), totalPages);
       const start = (rowsPage - 1) * ROWS_PER_PAGE;
-      const pageRows = filtered.slice(start, start + ROWS_PER_PAGE);
+      const pageRows = sorted.slice(start, start + ROWS_PER_PAGE);
 
       pageRows.forEach((row) => {
         const tr = document.createElement("tr");
