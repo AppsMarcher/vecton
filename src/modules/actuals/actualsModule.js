@@ -182,6 +182,7 @@
               </div>
               <div class="actuals-detail-actions">
                 <button id="actuals-delete-batch" class="delete-button secondary-danger" type="button">Excluir lote</button>
+                <button id="actuals-revalidate-batch" class="ghost-button" type="button" style="display:none">Revalidar lote</button>
                 <button id="actuals-add-row" class="ghost-button" type="button">Adicionar lancamento</button>
                 <button id="actuals-apply-batch" class="primary-button" type="button">Aplicar lote</button>
               </div>
@@ -318,12 +319,20 @@
           return;
         }
 
+        const refreshButton = event.target.closest("[data-refresh-row]");
+        if (refreshButton) {
+          await handleRefreshActualsRow(refreshButton.dataset.refreshRow);
+          return;
+        }
+
         const deleteButton = event.target.closest("[data-delete-row]");
         if (!deleteButton) {
           return;
         }
         await deleteActualsRow(deleteButton.dataset.deleteRow);
       });
+
+      document.querySelector("#actuals-revalidate-batch")?.addEventListener("click", handleRevalidateActualsBatch);
 
       document.addEventListener("click", (event) => {
         if (!activeErrorRowId) {
@@ -464,6 +473,8 @@
       applyButton.disabled = batch.totalRows === 0 || batch.errorRows > 0;
       addRowButton.disabled = false;
       deleteBatchButton.disabled = false;
+      const revalidateButton = document.querySelector("#actuals-revalidate-batch");
+      if (revalidateButton) revalidateButton.style.display = batch.errorRows > 0 ? "" : "none";
 
       [
         { label: "Ano base", value: String(batch.referenceYear) },
@@ -922,6 +933,57 @@
       batch.status = rows.length === 0 ? "draft" : (batch.errorRows > 0 ? "error" : "ready");
     }
 
+    async function handleRefreshActualsRow(rowId) {
+      const batch = getSelectedActualsBatch();
+      const row = getSelectedActualsRows().find((r) => r.id === rowId);
+      if (!batch || !row) return;
+      try {
+        await saveActualsRows(batch.id, [row]);
+        renderView();
+      } catch (error) {
+        console.error(error);
+        setUploadFeedback(String(error?.message || error || "Falha ao revalidar linha."), "error");
+      }
+    }
+
+    async function handleRevalidateActualsBatch() {
+      const batch = getSelectedActualsBatch();
+      if (!batch) return;
+      try {
+        setUploadFeedback("Revalidando lote...", "warn");
+        setSyncStatus("Revalidando lote de realizado...", "warn");
+        await ensureBatchRowsLoaded(batch.id, true);
+        const rows = getSelectedActualsRows();
+        if (!rows.length) return;
+        const payloadRows = rows.map((r) => ({
+          id: r.id,
+          batch_id: batch.id,
+          row_number: r.rowNumber,
+          entry_date: r.entryDate || null,
+          branch_code: r.branchCode || null,
+          account_number: r.accountNumber || null,
+          cost_center_number: r.costCenterNumber || null,
+          history: r.history || null,
+          lot_code: r.lotCode || null,
+          amount: r.amount ?? null,
+          raw_payload: r.rawPayload || {}
+        }));
+        const chunks = chunkArray(payloadRows, ACTUALS_IMPORT_UPSERT_CHUNK_SIZE);
+        for (let i = 0; i < chunks.length; i += 1) {
+          if (chunks.length > 1) setUploadFeedback(`Revalidando: bloco ${i + 1} de ${chunks.length}...`, "warn");
+          await upsertSupabaseRows("actuals_import_rows", chunks[i], ["id"]);
+        }
+        await refreshActualsBatch(batch.id);
+        setSyncStatus("Lote revalidado", "ok");
+        setUploadFeedback("Lote revalidado com sucesso.", "ok");
+        renderView();
+      } catch (error) {
+        console.error(error);
+        setUploadFeedback(String(error?.message || error || "Falha ao revalidar lote."), "error");
+        setSyncStatus(`Erro ao revalidar: ${formatSyncError(error)}`, "error");
+      }
+    }
+
     function getSelectedActualsBatch() {
       return getActualsBatchById(selectedBatchId);
     }
@@ -1252,7 +1314,10 @@
           <td class="actuals-col-lot"><input class="actuals-field actuals-field-lot" data-field="lotCode" type="text" maxlength="16" value="${escapeHtml(row.lotCode || "")}"></td>
           <td class="actuals-col-amount"><input class="actuals-field actuals-field-amount" data-field="amount" type="text" maxlength="15" value="${escapeHtml(formatAmountInput(row.amount))}"></td>
           <td class="actuals-col-status">${statusCell}</td>
-          <td class="actuals-col-action"><button class="table-icon-button table-icon-button-only" type="button" data-delete-row="${row.id}" aria-label="Excluir linha"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-trash"></use></svg></button></td>
+          <td class="actuals-col-action">
+            <button class="table-icon-button" type="button" data-refresh-row="${row.id}" aria-label="Revalidar linha"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+            <button class="table-icon-button" type="button" data-delete-row="${row.id}" aria-label="Excluir linha"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#vp-icon-trash"></use></svg></button>
+          </td>
         `;
         tbody.append(tr);
       });
