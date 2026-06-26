@@ -5773,12 +5773,43 @@ table th,
   background: transparent;
   color: var(--text-soft);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   cursor: pointer;
   white-space: nowrap;
   transition: background .12s;
 }
 .fc-new-btn:hover { background: var(--hover); }
+
+.fc-card-actions {
+  display: flex;
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 6px;
+}
+
+.fc-card-action-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-faint);
+  font-size: 0.7rem;
+  padding: 4px 0;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color .12s, background .12s;
+  letter-spacing: 0.02em;
+}
+
+.fc-card-action-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
+.fc-card-action-btn + .fc-card-action-btn {
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fc-card-action-btn--danger:hover { color: #f87171; }
 
 .fc-empty {
   color: var(--text-faint);

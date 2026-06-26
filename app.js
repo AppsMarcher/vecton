@@ -621,6 +621,7 @@ const { renderPlanningView, resetPlanningState } = createForecastModule
       resolveOrganizationId,
       fetchSupabaseRowsSafe,
       upsertSupabaseRows,
+      deleteSupabaseRows,
       isAdmin,
     })
   : { renderPlanningView: () => {}, resetPlanningState: () => {} };
