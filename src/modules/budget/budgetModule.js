@@ -352,7 +352,7 @@
         }
         const deleteButton = event.target.closest("[data-delete-row]");
         if (!deleteButton) return;
-        await deleteBudgetRow(deleteButton.dataset.deleteRow);
+        showDeleteConfirm(() => deleteBudgetRow(deleteButton.dataset.deleteRow));
       });
 
       document.querySelector("#budget-revalidate-batch")?.addEventListener("click", handleRevalidateBudgetBatch);
@@ -1299,16 +1299,53 @@
       return result;
     }
 
+    function showDeleteConfirm(onConfirm) {
+      document.querySelector(".vp-delete-confirm")?.remove();
+      const pop = document.createElement("div");
+      pop.className = "vp-delete-confirm";
+      pop.innerHTML = `
+        <span>Excluir esta linha?</span>
+        <button class="vp-delete-confirm-yes" type="button">Excluir</button>
+        <button class="vp-delete-confirm-no" type="button">Cancelar</button>
+      `;
+      document.body.appendChild(pop);
+      pop.querySelector(".vp-delete-confirm-yes").addEventListener("click", () => { pop.remove(); onConfirm(); });
+      pop.querySelector(".vp-delete-confirm-no").addEventListener("click", () => pop.remove());
+      setTimeout(() => document.addEventListener("click", (e) => { if (!pop.contains(e.target)) pop.remove(); }, { once: true }), 0);
+    }
+
     async function handleRefreshBudgetRow(rowId) {
       const batch = getSelectedBudgetBatch();
       const row = getSelectedBudgetRows().find((r) => r.id === rowId);
       if (!batch || !row) return;
+      const btn = document.querySelector(`[data-refresh-row="${rowId}"]`);
+      btn?.classList.add("refreshing");
       try {
         await saveBudgetRows(batch.id, [row]);
+        if (isSupabaseConfigured()) {
+          const [fresh] = await fetchSupabaseRowsSafe(
+            "budget_import_rows",
+            `id=eq.${encodeURIComponent(rowId)}&select=id,row_number,branch_code,account_number,cost_center_number,history,lot_code,amount,validation_status,validation_errors,raw_payload&limit=1`
+          );
+          if (fresh) {
+            const normalized = normalizeBudgetRow(fresh);
+            state.budgetRowsByBatch[batch.id] = (state.budgetRowsByBatch[batch.id] || []).map((r) =>
+              r.id === rowId ? normalized : r
+            );
+          }
+        }
         renderView();
+        const freshBtn = document.querySelector(`[data-refresh-row="${rowId}"]`);
+        if (freshBtn) {
+          freshBtn.classList.add("refresh-ok");
+          setTimeout(() => freshBtn.classList.remove("refresh-ok"), 1000);
+        }
+        setUploadFeedback("Linha revalidada.", "ok");
       } catch (error) {
         console.error(error);
         setUploadFeedback(String(error?.message || error || "Falha ao revalidar linha."), "error");
+      } finally {
+        btn?.classList.remove("refreshing");
       }
     }
 
