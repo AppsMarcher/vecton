@@ -3211,8 +3211,8 @@ thead .col-frozen-3 {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: var(--panel-hover);
+  border: 1px solid var(--line, rgba(255,255,255,0.08));
   border-radius: 10px;
   padding: 16px 20px;
   z-index: 9999;
