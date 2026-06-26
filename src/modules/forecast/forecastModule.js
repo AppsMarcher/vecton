@@ -152,6 +152,8 @@
         await loadScenarios(year);
       }
 
+      const gearSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`;
+
       const cards = (scenarios || []).map(s => {
         const color = s.color || "#6366f1";
         return `
@@ -162,14 +164,10 @@
             <span class="rrc-icon-wrap" style="background:${hexToRgba(color, 0.12)};border-color:${hexToRgba(color, 0.25)};color:${escapeHtml(color)}">
               ${iconSvg(s.icon)}
             </span>
+            <span class="rrc-edit-btn fc-card-menu-btn" role="button" data-fc-menu="${escapeHtml(s.id)}" aria-label="Opções" tabindex="-1">${gearSvg}</span>
           </div>
           <strong>${escapeHtml(s.name)}</strong>
           <span class="rrc-subtitle">Corte: ${escapeHtml(MONTH_LABELS[(s.cutoff_month || 1) - 1])} · ${s.reference_year}</span>
-          <div class="fc-card-actions" role="toolbar">
-            <button class="fc-card-action-btn" type="button" data-fc-action="edit" data-action-scenario="${escapeHtml(s.id)}">Editar</button>
-            <button class="fc-card-action-btn" type="button" data-fc-action="copy" data-action-scenario="${escapeHtml(s.id)}">Copiar</button>
-            <button class="fc-card-action-btn fc-card-action-btn--danger" type="button" data-fc-action="remove" data-action-scenario="${escapeHtml(s.id)}">Remover</button>
-          </div>
         </button>`;
       }).join("");
 
@@ -192,16 +190,12 @@
       });
 
       container.querySelector(".reports-card-grid")?.addEventListener("click", e => {
-        const actionBtn = e.target.closest("[data-fc-action]");
-        if (actionBtn) {
+        const menuBtn = e.target.closest("[data-fc-menu]");
+        if (menuBtn) {
           e.stopPropagation();
-          const scenarioId = actionBtn.dataset.actionScenario;
-          const scenario = (scenarios || []).find(s => s.id === scenarioId);
-          if (!scenario) return;
-          const action = actionBtn.dataset.fcAction;
-          if (action === "edit") renderEditForm(container, scenario);
-          else if (action === "copy") handleCopyScenario(container, scenario);
-          else if (action === "remove") handleRemoveScenario(container, scenario);
+          e.preventDefault();
+          const scenario = (scenarios || []).find(s => s.id === menuBtn.dataset.fcMenu);
+          if (scenario) openScenarioMenu(menuBtn, scenario, container);
           return;
         }
         const card = e.target.closest("[data-scenario-id]");
@@ -348,6 +342,35 @@
           saveBtn.textContent = "Criar cenário";
         }
       });
+    }
+
+    function closeScenarioMenu() {
+      document.querySelector(".fc-action-menu")?.remove();
+    }
+
+    function openScenarioMenu(anchor, scenario, container) {
+      closeScenarioMenu();
+      const pop = document.createElement("div");
+      pop.className = "fc-action-menu";
+      pop.innerHTML = `
+        <button class="fc-action-menu-item" type="button" data-fc-action="edit">Editar</button>
+        <button class="fc-action-menu-item" type="button" data-fc-action="copy">Copiar</button>
+        <button class="fc-action-menu-item fc-action-menu-item--danger" type="button" data-fc-action="remove">Remover</button>
+      `;
+      document.body.appendChild(pop);
+
+      const rect = anchor.getBoundingClientRect();
+      pop.style.top  = `${rect.bottom + 6}px`;
+      const left = Math.min(rect.left, window.innerWidth - 160);
+      pop.style.left = `${left}px`;
+
+      pop.querySelector("[data-fc-action='edit']").addEventListener("click", e => { e.stopPropagation(); closeScenarioMenu(); renderEditForm(container, scenario); });
+      pop.querySelector("[data-fc-action='copy']").addEventListener("click", e => { e.stopPropagation(); closeScenarioMenu(); handleCopyScenario(container, scenario); });
+      pop.querySelector("[data-fc-action='remove']").addEventListener("click", e => { e.stopPropagation(); closeScenarioMenu(); handleRemoveScenario(container, scenario); });
+
+      setTimeout(() => {
+        document.addEventListener("click", (ev) => { if (!pop.contains(ev.target)) closeScenarioMenu(); }, { once: true });
+      }, 0);
     }
 
     function renderEditForm(container, scenario) {
