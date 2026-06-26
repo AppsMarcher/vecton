@@ -3197,6 +3197,59 @@ thead .col-frozen-3 {
   margin-left: 8px;
 }
 
+@keyframes vp-spin {
+  to { transform: rotate(360deg); }
+}
+
+.table-icon-button-only.refreshing svg {
+  animation: vp-spin 0.7s linear infinite;
+  display: block;
+}
+
+.vp-delete-confirm {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  font-size: 0.84rem;
+  color: var(--text-1);
+  white-space: nowrap;
+}
+
+.vp-delete-confirm-yes {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.vp-delete-confirm-yes:hover { background: #dc2626; }
+
+.vp-delete-confirm-no {
+  background: transparent;
+  color: var(--text-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.vp-delete-confirm-no:hover { background: rgba(255, 255, 255, 0.05); }
+
 .actuals-field-date {
   width: 100%;
   min-width: 0;
