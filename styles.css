@@ -5831,6 +5831,7 @@ table th,
 .fc-action-menu-item--danger { color: #f87171; }
 
 .fc-empty {
+  grid-column: 1 / -1;
   color: var(--text-faint);
   font-size: 0.82rem;
   line-height: 1.6;
